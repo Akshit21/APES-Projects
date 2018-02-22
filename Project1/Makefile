@@ -2,14 +2,13 @@ CC= arm-linux-gnueabihf-gcc
 CFLAGS= -g -O0 -pthread
 LFLAGS= -lm -lrt
 
-/* Add source files here*/
-SSRCS= main.c 
+SSRCS = main.c 
 
 PROJECT1=project1
 
-all: $(PROGRAMS)
+all: $(PROJECT1)
 
-project1: $(PROJECT1)
+project1: $(SSRCS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS)
 
 .PHONY: clean
