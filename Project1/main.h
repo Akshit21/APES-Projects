@@ -18,6 +18,9 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
+/********************************************
+* S T A N D A R D    I N C L U D E S
+*********************************************/
 #include<pthread.h>
 #include<stdio.h>
 #include<stdlib.h>
@@ -26,10 +29,16 @@
 #include<sys/stat.h>
 #include<errno.h>
 #include<string.h>
+#include<time.h>
 #include<sys/signal.h>
 #include<sys/time.h>
 #include<stdint.h>
 #include<sys/types.h>
+
+/********************************************
+* L O C A L   I N C L U D E S
+*********************************************/
+#include "logger.h"
 
 /********************************************
 * D E F I N E S
