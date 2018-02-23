@@ -11,7 +11,7 @@
 * @author : Akshit Shah
 * @date : 02/22/2018
 *
-* @file : main.h
+* @file : logger.h
 * @brief : This header file provides an abstraction of thread definations and initialization 
            variables.
 ***************************************************************************************************/
