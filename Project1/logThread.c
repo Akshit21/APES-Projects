@@ -21,17 +21,6 @@
 
 #include "main.h"
 
-/* Create a Messaging Structure */
-Status_t create_message_info(Message_t **message)
-{
-   if(*message = (Message_t *)malloc(sizeof(Message_t)) == NULL)
-   {
-       printf("MALLOC ERROR\n");
-       return NULL_PTR;
-   }
-   return SUCCESS;
-}
-
 void *logThread(void *threadArgs)
 {
     printf("In Logger Thread\n");

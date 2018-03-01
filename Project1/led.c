@@ -12,7 +12,7 @@
 * @date : 02/22/2018
 *
 * @file : led.c
-* @brief : Logger Thread function declaration
+* @brief : GPIO LED APIs
 *
 * @tool : Compiler - GCC, Linker - GDB, Cross Compiler - arm-linux-gnueabihf-gcc
 * @hardware : Beagle Bone Green AM335x Arm Corex - A8, TMP106, APDS-9301

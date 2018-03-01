@@ -18,7 +18,10 @@
 #ifndef LOGGER_H_
 #define LOGGER_H_
 
-#define MAX_PAYLOAD_SIZE (256)
+#define MAX_PAYLOAD_SIZE (10)
+
+char *tasks[] = {"MAIN", "LOG DATA", "TEMP SENSE", "LIGHT SENSE", "SOCKET"};
+char *levels[] = {"INFO", "WARNING", "ERROR", "HEARTBEAT", "INIT"};
 
 typedef enum _Status_t
 {
@@ -55,33 +58,27 @@ typedef enum _Source_t
 } Source_t;
 
 
-typedef enum _Destination_t
-{
-    MAIN_THREAD,
-    LOGGER_THREAD,
-    TEMP_THREAD,
-    LIGHT_THREAD,
-    SOCKET_THREAD
-} Destination_t;
-
-typedef enum _LogType_t
+typedef enum _LogLevel_t
 {
     INFO,
     WARNING,
     ERROR,
     HEARTBEAT,
     INIT
-} LogType_t;
+} LogLevel_t;
+
 
 typedef struct _Message_t
 {
     Source_t sourceId;
-    Dest_t destId;
-    LogType_t logtype;
+    LogLevel_t type;
     RequesId_t requestId;
     time_t timeStamp;
-    Status_t status;
-    char dataPayload[MAX_PAYLOAD_SIZE];
+    char msg[MAX_PAYLOAD_SIZE];
 } Message_t;
+
+Status_t create_message_info(Message_t **message);
+Status_t log_data(FILE **pfile, Message_t *message);
+Status_t get_log_file(FILE **pfile, char *fileName);
 
 #endif /* LOGGER_H_ */
