@@ -14,7 +14,6 @@
 * @file : myqueue.h
 * @brief : This header file provides an abstraction of Queue APIs and initialization 
            variables.
-* @ref : https://stackoverflow.com/questions/3056307/how-do-i-use-mqueue-in-a-c-program-on-a-linux-based-system
 ***************************************************************************************************/
 #ifndef MYQUEUE_H_
 #define MYQUEUE_H_

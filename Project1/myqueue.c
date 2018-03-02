@@ -16,7 +16,7 @@
 *
 * @tool : Compiler - GCC, Linker - GDB, Cross Compiler - arm-linux-gnueabihf-gcc
 * @hardware : Beagle Bone Green AM335x Arm Corex - A8, TMP106, APDS-9301
-* @reference : 
+* @reference : https://stackoverflow.com/questions/3056307/how-do-i-use-mqueue-in-a-c-program-on-a-linux-based-system 
 ***************************************************************************************************/
 
 #include "main.h"
