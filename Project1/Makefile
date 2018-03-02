@@ -2,7 +2,7 @@ CC= arm-linux-gnueabihf-gcc
 CFLAGS= -g -O0 -pthread
 LFLAGS= -lm -lrt
 
-SSRCS = main.c 
+SSRCS = main.c logger.c myqueue.c led.c
 
 PROJECT1=project1
 

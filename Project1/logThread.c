@@ -21,15 +21,21 @@
 
 #include "main.h"
 
+FILE *pLogfile;
+
 void *logThread(void *threadArgs)
 {
     printf("In Logger Thread\n");
 
     /* Create a messaging structure */
-    Message_t *msg = NULL;
-    Status_t status =  create_message_info(&msg);
-    if(status != SUCCESS)
-	printf("Do Something and stop!!\n");
+    Message_t *msg;
     
-    // Else do your thread execution 
+	Status_t status =  create_message_info(&msg);
+    if(status != SUCCESS)
+		printf("Do Something and stop!!\n");
+
+	//Currently file name hard coded later take it from command line
+	status = Status_t get_log_file(&pLogfile, "test.txt")
+	if(status != SUCCESS)
+		printf("Error Opening the file");
 }
