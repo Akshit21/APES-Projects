@@ -28,7 +28,7 @@ Status_t ledOn(char *ledAddr)
 	if((pFile = fopen(ledAddr,"w")) == NULL)
 		return ERROR_OPEN;
 
-    if((fwrite("1",1,1,pFIle)<0)
+    if(fwrite("1",1,1,pFile) < 0)
 		return ERROR_WRITE;
 
     if(fclose(pFile) != 0)
@@ -45,7 +45,7 @@ Status_t ledOff(char *ledAddr)
 	if((pFile = fopen(ledAddr,"w")) == NULL)
 		return ERROR_OPEN;
 
-    if((fwrite("0",1,1,pFIle)<0)
+    if(fwrite("0",1,1,pFile) < 0)
 		return ERROR_WRITE;
 
     if(fclose(pFile) != 0)

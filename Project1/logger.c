@@ -21,6 +21,9 @@
 
 #include "main.h"
 
+char *task[] = {"MAIN", "LOG DATA", "TEMP SENSE", "LIGHT SENSE", "SOCKET"};
+char *levels[] = {"INFO", "WARNING", "ERROR", "HEARTBEAT", "INIT"};
+
 /* Create a Messaging Structure */
 Status_t create_message_info(Message_t **message)
 {
@@ -30,7 +33,7 @@ Status_t create_message_info(Message_t **message)
     	return NULL_PTR;
 	}
 
-	memset(*message,(uint8_t)`\0',sizeof(Message_t));
+	memset(*message,(uint8_t)'\0',sizeof(Message_t));
 	return SUCCESS;
 }
 
@@ -43,9 +46,9 @@ Status_t log_data(FILE **pfile, Message_t *message)
 	char logData[100] = {(uint8_t)'\0'};
 	sprintf(logData, "Task: %s\tTime: %s\n%s: %s\n\n",
 		task[message->sourceId], ctime(&message->timeStamp), 
-		level[message->type], message->msg) 
+		levels[message->type], message->msg);
 
-	if(fwrite(logData, strlen(logData), 1, pFile) < 0)
+	if(fwrite(logData, strlen(logData), 1, *pfile) < 0)
 	{
 		printf("Error in Writing Data");
 		return ERROR_WRITE;
@@ -56,7 +59,7 @@ Status_t log_data(FILE **pfile, Message_t *message)
 
 Status_t get_log_file(FILE **pfile, char *fileName)
 {
-	if((*pFile=fopen(fileName,"w+")) == NULL)
+	if((*pfile=fopen(fileName,"w+")) == NULL)
 	{
 		printf("Error in Creating File\n");
 		return ERROR_OPEN;

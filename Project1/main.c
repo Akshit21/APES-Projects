@@ -59,6 +59,7 @@ int main()
     pthread_join(threads[LOG_THREAD], NULL);
     pthread_join(threads[TEMP_THREAD], NULL);
     pthread_join(threads[LIGHT_THREAD], NULL);
-    pthread_join(threads[SOCKET_THREAD], NULL);   
+    pthread_join(threads[SOCKET_THREAD], NULL);
 
+    return 0;
 }

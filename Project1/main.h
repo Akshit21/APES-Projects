@@ -57,4 +57,12 @@
 /* Array to store thread ids */
 pthread_t threads[NUM_THREADS];
 
+/********************************************
+* T H R E A D  F U N C T I O N S
+*********************************************/
+void *logThread(void *threadArgs);
+void *tempThread(void *threadArgs);
+void *lightThread(void *threadArgs);
+void *socketThread(void *threadArgs);
+
 #endif  /* MAIN_H_ */

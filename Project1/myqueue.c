@@ -38,7 +38,7 @@ void init_queue()
 		light_queue_handle == -1 || main_queue_handle == -1 ||
 		socket_queue_handle == -1)
 	{
-		printf("Error Opening %s\n",qName);
+		printf("Error Opening Queue\n");
 	}
 	else
 	{

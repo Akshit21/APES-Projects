@@ -20,15 +20,13 @@
 
 #define MAX_PAYLOAD_SIZE (10)
 
-char *tasks[] = {"MAIN", "LOG DATA", "TEMP SENSE", "LIGHT SENSE", "SOCKET"};
-char *levels[] = {"INFO", "WARNING", "ERROR", "HEARTBEAT", "INIT"};
-
 typedef enum _Status_t
 {
     SUCCESS,
     ERROR_READ,
     ERROR_WRITE,
     ERROR_OPEN,
+	ERROR_CLOSE,
     ERROR_ADDR,
     ERROR_DATA,
     NULL_PTR
@@ -37,14 +35,13 @@ typedef enum _Status_t
 
 typedef enum _RequesId_t
 {
-    HEARTBEAT,
+    HEART_BEAT,
     STARTUP_TEST,
-    INIT,
     LOG_MSG,
     GET_TEMP,
     GET_LIGHT,
     GET_LUX,
-    CLOSE_THREAD
+    CLOSE_SYSTEM
 } RequesId_t;
 
 
