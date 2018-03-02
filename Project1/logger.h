@@ -29,7 +29,10 @@ typedef enum _Status_t
 	ERROR_CLOSE,
     ERROR_ADDR,
     ERROR_DATA,
-    NULL_PTR
+    NULL_PTR,
+    
+    /*Add new states above this line*/
+    ERROR_MAX
 } Status_t;
 
 
@@ -41,7 +44,10 @@ typedef enum _RequesId_t
     GET_TEMP,
     GET_LIGHT,
     GET_LUX,
-    CLOSE_SYSTEM
+    SHUT_DOWN,
+    
+    /*Add new states above this line*/
+    REQUEST_MAX
 } RequesId_t;
 
 
@@ -51,7 +57,10 @@ typedef enum _Source_t
     LOGGER_THREAD,
     TEMP_THREAD,
     LIGHT_THREAD,
-    SOCKET_THREAD
+    SOCKET_THREAD,
+    
+    /*Add new states above this line*/
+    SOURCE_MAX
 } Source_t;
 
 
@@ -61,7 +70,10 @@ typedef enum _LogLevel_t
     WARNING,
     ERROR,
     HEARTBEAT,
-    INIT
+    INIT,
+    
+    /*Add new states above this line*/
+    LEVEL_MAX
 } LogLevel_t;
 
 
@@ -74,6 +86,7 @@ typedef struct _Message_t
     char msg[MAX_PAYLOAD_SIZE];
 } Message_t;
 
+/*FUNCTION PROTOTYPES*/
 Status_t create_message_info(Message_t **message);
 Status_t log_data(FILE **pfile, Message_t *message);
 Status_t get_log_file(FILE **pfile, char *fileName);

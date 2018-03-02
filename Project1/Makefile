@@ -1,5 +1,5 @@
-#CC= arm-linux-gnueabihf-gcc
-CC= gcc
+CC= arm-linux-gnueabihf-gcc
+#CC= gcc
 CFLAGS= -g -O0 -pthread
 LFLAGS= -lm -lrt
 
