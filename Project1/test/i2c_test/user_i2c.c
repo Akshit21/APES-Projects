@@ -25,7 +25,7 @@ int32_t i2c_write_reg(int32_t fp, uint8_t reg_addr, uint8_t value)
 
 int32_t i2c_read_reg(int32_t fp,uint8_t reg_addr, uint8_t *rbuff, uint32_t num)
 {
-  if(write(fp, &reg_addr, 1)!=1)
+  if(write(fp, &(0x80|reg_addr), 1)!=1)
   {
     perror("Failed to read the register address.\n");
     return -1;
@@ -80,7 +80,7 @@ int32_t i2c_read_reg_mutex(int32_t fp,uint8_t reg_addr,
                            uint8_t *rbuff, uint32_t num)
 {
   pthread_mutex_lock(&i2c_lock);
-  if(write(fp, &reg_addr, 1)!=1)
+  if(write(fp, &(0x80|reg_addr), 1)!=1)
   {
     pthread_mutex_unlock(&i2c_lock);
     perror("Failed to read the register address.\n");

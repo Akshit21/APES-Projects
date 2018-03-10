@@ -1,9 +1,0 @@
-/home/shuting/Desktop/APES-Projects/Project1/test/3rd-party/build-Debug/lib/pkgconfig/cmocka.pc
-/home/shuting/Desktop/APES-Projects/Project1/test/3rd-party/build-Debug/lib/cmake/cmocka/cmocka-config.cmake
-/home/shuting/Desktop/APES-Projects/Project1/test/3rd-party/build-Debug/lib/cmake/cmocka/cmocka-config-version.cmake
-/home/shuting/Desktop/APES-Projects/Project1/test/3rd-party/build-Debug/include/cmocka.h
-/home/shuting/Desktop/APES-Projects/Project1/test/3rd-party/build-Debug/include/cmocka_pbc.h
-/home/shuting/Desktop/APES-Projects/Project1/test/3rd-party/build-Debug/lib/libcmocka.so.0.4.0
-/home/shuting/Desktop/APES-Projects/Project1/test/3rd-party/build-Debug/lib/libcmocka.so.0
-/home/shuting/Desktop/APES-Projects/Project1/test/3rd-party/build-Debug/lib/libcmocka.so
-/home/shuting/Desktop/APES-Projects/Project1/test/3rd-party/build-Debug/lib/libcmocka.a

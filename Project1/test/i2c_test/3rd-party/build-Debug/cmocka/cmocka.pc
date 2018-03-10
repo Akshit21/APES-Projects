@@ -1,6 +1,0 @@
-Name: cmocka
-Description: The cmocka unit testing library
-Version: 1.1.0
-Libs: -L/home/shuting/Desktop/APES-Projects/Project1/test/3rd-party/build-Debug/lib -lcmocka
-Cflags: -I/home/shuting/Desktop/APES-Projects/Project1/test/3rd-party/build-Debug/include
-

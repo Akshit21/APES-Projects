@@ -1,7 +1,10 @@
-#ifndef _AV02_H__
-#define _AV02_H__
+#ifndef _APDS9301_H__
+#define _APDS9301_H__
 
-#define AV02_ADDR (0x39)
+#include <stdint.h>
+#include "user_i2c.h"
+
+#define APDS9301_ADDR (0x39)
 
 #define CONTROL_REG (0x00)
 #define TIMING_REG  (0x01)
@@ -21,5 +24,6 @@
 
 #define POWER_ON  (0x03)
 #define POWER_OFF (0x00)
+
 
 #endif

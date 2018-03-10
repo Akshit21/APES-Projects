@@ -1,7 +1,15 @@
-# Makefile for dlinklist
+CFLAGS = -std=gnu11 -Wall -g -O0
 
+ifeq ($(ARCH), BBB)
+BBB_USER = debian
+BBB_IP = 192.168.7.2
+BBB_DIRECTORY = /home/debian/bin
+CC = arm-linux-gnueabihf-gcc
+CFLAGS += -march=armv7-a -mtune=cortex-a8 -mfpu=neon
+REMOTE = $(BBB_USER)@$(BBB_IP):$(BBB_DIRECTORY)
+else
 CC = gcc
-CFLAGS = -std=gnu11 -Wall -Werror -g -O0
+endif
 
 #
 # build third-party libraries
@@ -24,7 +32,7 @@ CMOCKA_LIBRARY = $(THIRD_PARTY_DIR)/build-Debug/lib/libcmocka.a
 
 cmocka : $(SUBDIRS)
 
-CFLAGS += -I $(CMOCKA_INCLUDE_DIR)
+CFLAGS += -I $(CMOCKA_INCLUDE_DIR) -lcmocka
 
 #
 # quick and dirty build rules to demonstrate testing, not good build
@@ -77,10 +85,10 @@ $(EXE) : $(EXE_OBJS) $(LIB)
 
 test : $(TEST_LINKEDLIST_EXE)
 	sudo ./$(TEST_LINKEDLIST_EXE)
+#	sudo scp $(TEST_LINKEDLIST_EXE) $(REMOTE)
 
 $(TEST_LINKEDLIST_EXE) : $(TEST_DLINKEDLIST_SRCS) $(LIB)
-	$(CC) $(CFLAGS) -o $@ $^ -L $(CMOCKA_LIBRARY) -I $(CMOCKA_INCLUDE_DIR) -lcmocka
-
+	$(CC) $(CFLAGS) -o $@ $^ -L $(CMOCKA_LIBRARY) -I $(CMOCKA_INCLUDE_DIR)
 
 .PHONY : clean
 clean : FORCE
