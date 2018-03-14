@@ -7,4 +7,8 @@
 #define CONFIG_REG (0x01)
 #define THRESH_REGL  (0x02)
 #define THRESH_REGH (0x03)
+
+#define CELSIUS_FORMAT  (0x00)
+#define FAHRENHEIT_FORMAT (0x01)
+
 #endif

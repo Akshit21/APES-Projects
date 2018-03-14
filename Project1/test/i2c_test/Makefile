@@ -32,7 +32,7 @@ CMOCKA_LIBRARY = $(THIRD_PARTY_DIR)/build-Debug/lib/libcmocka.a
 
 cmocka : $(SUBDIRS)
 
-CFLAGS += -I $(CMOCKA_INCLUDE_DIR) -lcmocka
+CFLAGS += -I $(CMOCKA_INCLUDE_DIR) -lcmocka -pthread
 
 #
 # quick and dirty build rules to demonstrate testing, not good build
@@ -84,7 +84,8 @@ $(EXE) : $(EXE_OBJS) $(LIB)
 	$(CC) $(CFLAGS) -o $@ $^ -lm
 
 test : $(TEST_LINKEDLIST_EXE)
-	sudo ./$(TEST_LINKEDLIST_EXE)
+	echo "done"
+	#sudo ./$(TEST_LINKEDLIST_EXE)
 #	sudo scp $(TEST_LINKEDLIST_EXE) $(REMOTE)
 
 $(TEST_LINKEDLIST_EXE) : $(TEST_DLINKEDLIST_SRCS) $(LIB)
