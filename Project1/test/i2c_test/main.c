@@ -10,6 +10,7 @@
 #include <sys/signal.h>
 #include <sys/time.h>
 #include <errno.h>
+#include <semaphore.h>
 
 #include "user_i2c.h"
 #include "apds9301.h"
@@ -24,8 +25,7 @@
 
 pthread_mutex_t tmp_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t tmp_cond = PTHREAD_COND_INITIALIZER;
-pthread_mutex_t apds_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t apds_cond = PTHREAD_COND_INITIALIZER;
+sem_t apds_sem;
 
 int32_t tmp1021_init(int32_t *dev_fp);
 int32_t apds9301_init(int32_t *dev_fp);
@@ -39,14 +39,16 @@ void apds_irq_handler(int signo)
   if(signo == SIGIO)
   {
     /* Clear the apds interrupt assertion */
-	  pthread_cond_signal(&apds_cond);
+  	sem_post(&apds_sem);
   }
 }
 #endif
 
 void tmp_timer_handler(union sigval arg)
 {
+  pthread_mutex_lock(&tmp_mutex);
 	pthread_cond_signal(&tmp_cond);
+  pthread_mutex_unlock(&tmp_mutex);
 }
 
 
@@ -129,7 +131,7 @@ void * task_light(void * param)
   struct sigaction apds_irq_action;
   int16_t ch0_data, ch1_data;
   float light;
-  uint8_t retry = 0;
+  uint8_t op_flag = 0, retry = 0;
   /* Set up the light sensor */
   if(apds9301_init(&apds_handle)!=0)
   {
@@ -165,35 +167,43 @@ void * task_light(void * param)
   }
 #endif
 
+  /* Initialzie a semephore for ligth state change event */
+  sem_init(&apds_sem, 0, 0);
   while(1)
   {
     /* Enqueue state changes to the msg queue */
-	pthread_mutex_lock(&apds_mutex);
-	pthread_cond_wait(&apds_cond, &apds_mutex);
-	pthread_mutex_unlock(&apds_mutex);
-    /* Get light level in lux */
-    if((i2c_read_word_mutex(apds_handle, CMD | WORD | DATA0_REG,
-                            &ch0_data)!=0) ||
-       (i2c_read_word_mutex(apds_handle, CMD | WORD | DATA1_REG,
-                            &ch1_data)!=0))
+
+    /* Wait for light state change event */
+    sem_wait(&apds_sem);
+    /* Update light state */
+    while((retry<=RETRY_MAX)&&(op_flag==0))
     {
-      /* If the read fails 3 times consecutively, break the read loop */
-      if(retry == RETRY_MAX)
+      if((i2c_read_word_mutex(apds_handle, CMD | WORD | DATA0_REG, &ch0_data)!=0) ||
+         (i2c_read_word_mutex(apds_handle, CMD | WORD | DATA1_REG, &ch1_data)!=0))
       {
-        /* Enqueue error message onto the queue */
-        break;
+        retry++;
       }
       else
-        retry++;
+      {
+        retry = 0;
+        op_flag = 1;
+      }
     }
-    else
+    /* Failed to read from sensors consecutively */
+    if(op_flag==0)
     {
-      retry = 0;
-      light = apds_raw_to_lux(ch0_data, ch1_data);
-      printf("Light:%.2f\n", light);
+      //error
+      return;
     }
-    /* sleep */
-    sleep(5);
+
+    op_flag = 0;
+    light_state = ch0_data > DEFAULT_THRESHHIGH_VALUE ? EXPOSED :
+                  ch0_data < DEFAULT_THRESHLOW_VALUE ? DARK : NORMAL;
+
+    /* Enqueue error message onto the queue */
+
+    //light = apds_raw_to_lux(ch0_data, ch1_data);
+    //printf("Light:%.2f\n", light);
   }
 
   /* If ever breaks the loop, clean up */
@@ -279,7 +289,7 @@ int32_t timer_setup(uint32_t ms, void (*handler))
 	timer_t timer_id;
 	struct itimerspec ts;
 	struct sigevent se;
-	
+
 	/* Set the sigevent struct to handle the timer signal */
 	se.sigev_notify = SIGEV_THREAD;
 	se.sigev_value.sival_ptr = &timer_id;
