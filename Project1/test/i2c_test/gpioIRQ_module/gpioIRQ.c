@@ -31,7 +31,7 @@ MODULE_DESCRIPTION("GPIO interrupt sample driver");
 
 /* OMAPL138_LCDK : S3 switch */
 
-#define GPIO_INT 37
+#define GPIO_INT 30
 
 /* GPIO No 141 -> GPIO8[12] : OMAPL138_LCDK : J15[16] */
 
@@ -62,7 +62,7 @@ static struct file_operations gpio_irq_fops = {
 };
 
 /*Interrupt Handler */
-static irqreturn_t gpio_interrupt(int irq, void *dev_id, struct pt_regs *regs)
+static irqreturn_t gpio_interrupt(int irq, void *dev_id)
 {
 	printk("\n GPIO interrupt raised; IRQ No : %d\n",irq);
 	kill_fasync(&gpio_irq_async_queue, SIGIO, POLL_IN);
@@ -82,7 +82,7 @@ void gpio_request_irq(int irq_num)
 
 //	irq_set_irq_type(irq_num,IRQ_TYPE_EDGE_BOTH);
 
-	status = request_irq(irq_num, gpio_interrupt,0,"gpio_int", NULL);
+	status = request_irq(irq_num, gpio_interrupt, 0, "gpio_int", NULL);
 
 /* Need to use 'IRQ_TYPE_EDGE_FALLING' since the switch S3 is pulled high and it should raise interrupt when we pressed switch (ie falling edge) */
 

@@ -32,7 +32,7 @@ CMOCKA_LIBRARY = $(THIRD_PARTY_DIR)/build-Debug/lib/libcmocka.a
 
 cmocka : $(SUBDIRS)
 
-CFLAGS += -I $(CMOCKA_INCLUDE_DIR) -lcmocka -pthread
+CFLAGS += -I $(CMOCKA_INCLUDE_DIR) -lcmocka -pthread -lrt
 
 #
 # quick and dirty build rules to demonstrate testing, not good build

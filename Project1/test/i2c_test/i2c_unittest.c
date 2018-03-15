@@ -8,6 +8,7 @@
 #include "user_i2c.h"
 #include "apds9301.h"
 
+
 void test_apds9301(void** state)
 {
   int8_t read_byte;
@@ -43,7 +44,7 @@ void test_apds9301(void** state)
   /* Power off the device */
   assert_int_equal(i2c_write_byte_mutex(apds_handle, CMD|CONTROL_REG,
                                         POWER_OFF), 0);
-  assert_int_equal(i2c_read_reg_mutex(apds_handle, CMD|CONTROL_REG,
+  assert_int_equal(i2c_read_byte_mutex(apds_handle, CMD|CONTROL_REG,
                                       &read_byte), 0);
   assert_true(read_byte == 0x00);
   i2c_disconnect_mutex(apds_handle);

@@ -7,6 +7,9 @@
 #include <pthread.h>
 #include <math.h>
 #include <string.h>
+#include <sys/signal.h>
+#include <sys/time.h>
+#include <errno.h>
 
 #include "user_i2c.h"
 #include "apds9301.h"
@@ -16,12 +19,19 @@
 #define LIGHT_TASK
 #define LIGHT_TASK_ALERT
 
+#define TMP_PERIOD	(2000)
 #define RETRY_MAX (3)
+
+pthread_mutex_t tmp_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t tmp_cond = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t apds_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t apds_cond = PTHREAD_COND_INITIALIZER;
 
 int32_t tmp1021_init(int32_t *dev_fp);
 int32_t apds9301_init(int32_t *dev_fp);
 float tmp_raw_to_temperature(int16_t raw, int32_t format);
 float apds_raw_to_lux(int16_t ch0, int16_t ch1);
+int32_t timer_setup(uint32_t ms, void (*handler));
 
 #ifdef LIGHT_TASK_ALERT
 void apds_irq_handler(int signo)
@@ -29,12 +39,16 @@ void apds_irq_handler(int signo)
   if(signo == SIGIO)
   {
     /* Clear the apds interrupt assertion */
-
-    printf("light alert!\n");
+	  pthread_cond_signal(&apds_cond);
   }
-  return;
 }
 #endif
+
+void tmp_timer_handler(union sigval arg)
+{
+	pthread_cond_signal(&tmp_cond);
+}
+
 
 /* Missing:
  * - Hearbeat report
@@ -47,13 +61,21 @@ void * task_temp(void * param)
 {
   int32_t tmp_handle;
   int16_t tmp;
+  timer_t timer_id;
   float temperature;
   uint8_t retry = 0;
-  /* Set up the tmp1021 sensor by default */
+ /* Set up the tmp1021 sensor by default */
   if(tmp1021_init(&tmp_handle)!=0)
   {
     // Error log
-    exit(EXIT_FAILURE);
+    return;
+  }
+
+  /* Set up a periodic timer */
+  if((timer_id = timer_setup(TMP_PERIOD, tmp_timer_handler))==-1)
+  {
+  	// error;
+	return;
   }
 
   /* Periodic temperature read */
@@ -62,7 +84,7 @@ void * task_temp(void * param)
     /* Processing all msg in the queue */
     /* - Heartbeat request from main
        - External request */
-
+	pthread_cond_wait(&tmp_cond, &tmp_mutex);
     /* Read temperature raw data from the sensor */
     if(i2c_read_word_mutex(tmp_handle, TEMP_REG, &tmp)!=0)
     {
@@ -83,14 +105,13 @@ void * task_temp(void * param)
       /* Enqueue the temperature onto the msg queue */
       printf("Temperature: %.2f\n", temperature);
     }
-    /* Sleep */
-    sleep(1);
   }
 
   /* If ever breaks the loop, clean up */
+  timer_delete(timer_id);
   i2c_disconnect_mutex(tmp_handle);
   /* Enqueue task close message */
-
+  return;
 }
 #endif
 
@@ -126,7 +147,7 @@ void * task_light(void * param)
     // Error log
     exit(EXIT_FAILURE);
   }
-  if((apds_irq_handle=open("/dev/gpio_apds_int", O_RDWR))<0)
+  if((apds_irq_handle=open("/dev/gpio_int", O_RDWR))<0)
   {
     // Error log
     exit(EXIT_FAILURE);
@@ -147,7 +168,9 @@ void * task_light(void * param)
   while(1)
   {
     /* Enqueue state changes to the msg queue */
-
+	pthread_mutex_lock(&apds_mutex);
+	pthread_cond_wait(&apds_cond, &apds_mutex);
+	pthread_mutex_unlock(&apds_mutex);
     /* Get light level in lux */
     if((i2c_read_word_mutex(apds_handle, CMD | WORD | DATA0_REG,
                             &ch0_data)!=0) ||
@@ -170,10 +193,13 @@ void * task_light(void * param)
       printf("Light:%.2f\n", light);
     }
     /* sleep */
-    sleep(1);
+    sleep(5);
   }
 
   /* If ever breaks the loop, clean up */
+	close(adps_irq_handle);
+	pthread_cond_destroy(&cond, NULL);
+	pthread_mutex_destroy(&mutex, NULL);
   i2c_disconnect_mutex(apds_handle);
 }
 #endif
@@ -218,7 +244,7 @@ int32_t apds9301_init(int32_t *dev_fp)
 float tmp_raw_to_temperature(int16_t raw, int32_t format)
 {
   float temperature;
-  raw = (raw & 0xFFF0) >> 4;
+  raw = (int16_t)((raw&0xf000)>>12) | ((raw&0x00ff)<<4);
   switch (format)
   {
     case CELSIUS_FORMAT:
@@ -246,6 +272,30 @@ float apds_raw_to_lux(int16_t ch0, int16_t ch1)
   else
     lux = 0.0f;
   return lux;
+}
+
+int32_t timer_setup(uint32_t ms, void (*handler))
+{
+	timer_t timer_id;
+	struct itimerspec ts;
+	struct sigevent se;
+	
+	/* Set the sigevent struct to handle the timer signal */
+	se.sigev_notify = SIGEV_THREAD;
+	se.sigev_value.sival_ptr = &timer_id;
+	se.sigev_notify_function = handler;
+	se.sigev_notify_attributes = NULL;
+
+	/* Set up the timer */
+	ts.it_value.tv_sec = ms / 1000;
+	ts.it_value.tv_nsec = (ms % 1000) * 1000;
+	ts.it_interval.tv_sec = ms / 1000;
+	ts.it_interval.tv_nsec = (ms % 1000) * 1000;
+	if(timer_create(CLOCK_REALTIME, &se, &timer_id)==-1)
+		return -1;
+	if(timer_settime(timer_id, 0, &ts, 0)==-1)
+		return -1;
+	return timer_id;
 }
 
 int main(int argc, char const *argv[])
