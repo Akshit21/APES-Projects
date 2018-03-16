@@ -39,6 +39,14 @@ int main(int argc, char const *argv[])
   }
 #endif
 
+  if(pthread_create(&thread4, NULL, task_log, NULL))
+  {
+    perror("Failed to create the socket task.");
+    exit(EXIT_FAILURE);
+  }
+  /* Heartbeat processing */
+
+  /* Wait for child threads */
 #ifdef TEMP_TASK
   pthread_join(thread1, NULL);
 #endif
@@ -48,5 +56,6 @@ int main(int argc, char const *argv[])
 #ifdef SOCKET_TASK
   pthread_join(thread3, NULL);
 #endif
+  pthread_join(thread4, NULL);
   exit(EXIT_SUCCESS);
 }

@@ -3,8 +3,8 @@
 
 sem_t apds_sem;
 
-uint32_t light_state;
-
+char *light_state_s[] = {"DAY", "NIGHT"};
+int32_t light_state;
 
 static int32_t apds_update_state(int32_t dev_fp, uint32_t state);
 static float apds_raw_to_lux(int16_t ch0, int16_t ch1);
@@ -30,12 +30,18 @@ void * task_light(void * param)
   int16_t ch0_data, ch1_data;
   float light;
   uint8_t op_flag = 0, retry = 0;
-  int32_t initialized_flag = 1;
+  Status_t status = SUCCESS;
+  const struct timespec sem_timeout;
+  sem_timeout.tv_sec = 1;
+  sem_timeout.tv_nsec = 0;
+  Message_t apds_msg;
+  ThreadInfo_t info;
+
   /* Set up the light sensor */
   if(apds9301_init(&apds_handle)!=0)
   {
     // Error log
-    initialized_flag = 0;
+    status = ERROR;
   }
 
 #ifdef LIGHT_TASK_ALERT
@@ -46,23 +52,23 @@ void * task_light(void * param)
   if(sigaction(SIGIO, &apds_irq_action, NULL)!=0)
   {
     // Error log
-    initialized_flag = 0;
+    status = ERROR;
   }
   if((apds_irq_handle=open("/dev/gpio_int", O_RDWR))<0)
   {
     // Error log
-    initialized_flag = 0;
+    status = ERROR;
   }
   if(fcntl(apds_irq_handle, F_SETOWN, getpid())==-1)
   {
     // Error log
-    initialized_flag = 0;
+    status = ERROR;
   }
   if(fcntl(apds_irq_handle, F_SETFL,
            fcntl(apds_irq_handle, F_GETFL) | FASYNC) == -1)
   {
     // Error log
-    initialized_flag = 0;
+    status = ERROR;
   }
 #endif
 
@@ -70,49 +76,110 @@ void * task_light(void * param)
   if(sem_init(&apds_sem, 0, 0)==-1)
   {
       //error log
-      initialized_flag = 0;
+      status = ERROR;
   }
 
-  while(initialized_flag)
+  while(status == SUCCESS)
   {
     /* Enqueue state changes to the msg queue */
 
     /* Wait for light state change event */
-    sem_wait(&apds_sem);
-    /* Update light state */
-    while((retry<=RETRY_MAX)&&(op_flag==0))
+    if(sem_timedwait(&apds_sem, &sem_timeout)!=-1)
     {
-      if(apds_update_state(apds_handle, light_state)==-1)
-      // if((i2c_read_word_mutex(apds_handle, CMD | WORD | DATA0_REG, &ch0_data)!=0) ||
-      //    (i2c_read_word_mutex(apds_handle, CMD | WORD | DATA1_REG, &ch1_data)!=0))
+      /* Update light state */
+      while((retry<=RETRY_MAX)&&(op_flag==0))
       {
-        retry++;
+        if(apds_update_state(apds_handle, light_state)==-1)
+        // if((i2c_read_word_mutex(apds_handle, CMD | WORD | DATA0_REG, &ch0_data)!=0) ||
+        //    (i2c_read_word_mutex(apds_handle, CMD | WORD | DATA1_REG, &ch1_data)!=0))
+        {
+          retry++;
+        }
+        else
+        {
+          retry = 0;
+          op_flag = 1;
+        }
+      }
+      /* Failed to read from sensors consecutively */
+      if(op_flag==0)
+      {
+        //error
+        status = ERROR;
       }
       else
       {
-        retry = 0;
-        op_flag = 1;
+        op_flag = 0;
+        apds_msg = create_message_struct(LIGHT_THREAD, LOGGERTHREAD, INFO, LOG_MSG);
+        sprintf(apds_msg.msg,"Light state changed to: %s",light_state_s[light_state]);
+        info.data = apds_msg;
+        info.thread_mutex_lock = log_queue_mutex;
+        info.qName = LOGGER_QUEUE;
+        status = msg_log(&info);
       }
     }
-    /* Failed to read from sensors consecutively */
-    if(op_flag==0)
-    {
-      //error
-      break;
-    }
-
-    op_flag = 0;
-
     /* Enqueue error message onto the queue */
 
     //light = apds_raw_to_lux(ch0_data, ch1_data);
     //printf("Light:%.2f\n", light);
+    /* Process message queue */;
+		while (light_queue_flag)
+		{
+			light_queue_flag--;
+
+		  memzero(&info.data.msg, sizeof(info.data.msg));
+			info.thread_mutex_lock = light_queue_mutex;
+			info.qName = LIGHT_QUEUE;
+      if((status = msg_receive(&info)!=SUCCESS)
+      {
+			  apds_msg = info.data;
+			  switch(apds_msg.requestId)
+			  {
+				  case HEART_BEAT:
+					  apds_msg = create_message_struct(LIGHT_THREAD, MAINTHREAD, HEARTBEAT,
+							                             HEART_BEAT);
+					  info.data = apds_msg;
+					  info.thread_mutex_lock = main_queue_mutex;
+					  info.qName = MAIN_QUEUE;
+					  status = msg_send(&info);
+					  break;
+				  case SHUT_DOWN:
+            status = ERROR;
+					  break; //EXIT CODE
+				  case GET_LIGHT:
+					  // Get the light value for external request
+					  apds_msg = create_message_struct(LIGHT_THREAD, SOCKETTHREAD, INFO,
+                                             GET_LIGHT);
+            // populate lux value
+					  info.data = apds_msg;
+					  info.thread_mutex_lock = socket_queue_mutex;
+					  info.qName = SOCKET_QUEUE;
+					  msg_send(&info);
+					  break;
+				  case GET_LIGHT_STATE:
+					// Get the light state for external request
+					  apds_msg = create_message_struct(LIGHT_THREAD, SOCKETTHREAD, INFO,
+						                                 GET_LIGHT);
+            // Populate light state
+            info.data = apds_msg;
+					  info.thread_mutex_lock = socket_queue_mutex;
+					  info.qName = SOCKET_QUEUE;
+					  msg_send(&info);
+					  break;
+				  default:
+					  break;
+			  }
+      }
+		}
   }
 
   /* THread clean up routine */
 	close(apds_irq_handle);
   sem_destroy(&apds_sem);
   i2c_disconnect_mutex(apds_handle);
+  pthread_mutex_destroy(&light_queue_mutex);
+  mq_unlink(LIGHT_QUEUE);
+  pthread_exit();
 }
 
 #endif
