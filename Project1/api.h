@@ -18,7 +18,7 @@
 #ifndef API_H_
 #define API_H_
 
-#define MAX_PAYLOAD_SIZE (10)
+#define MAX_PAYLOAD_SIZE (20)
 
 typedef enum _Status_t
 {
@@ -99,6 +99,7 @@ typedef struct _ThreadInfo_t
 {
 	Message_t data;
 	pthread_mutex_t thread_mutex_lock;
+	//unsigned int priority;
 	const char *qName;
 } ThreadInfo_t;
 

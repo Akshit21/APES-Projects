@@ -121,6 +121,7 @@ void msg_send(ThreadInfo_t *info)
 	mq_close(queue_handle);
 	update_flag(info->data.destId);
 	pthread_mutex_unlock(&info->thread_mutex_lock);
+	sleep(1);
 }
 
 void msg_receive(ThreadInfo_t *info)
@@ -142,6 +143,7 @@ void msg_receive(ThreadInfo_t *info)
 	}
 	mq_close(queue_handle);
 	pthread_mutex_unlock(&info->thread_mutex_lock);
+	sleep(1);
 }
 
 void msg_log(Source_t sourceId, LogLevel_t type, char *msg)
@@ -161,10 +163,7 @@ void msg_log(Source_t sourceId, LogLevel_t type, char *msg)
 }
 
 void request_heartbeat()
-{
-	/* Increment all the flags */
-	log_flag++;socket_flag++;temp_flag++;light_flag++;
-	
+{	
 	/*Populate the message structure*/
 	Message_t heartbeat_msg = {0};
 	char *msg = "Are you Alive?";

@@ -47,7 +47,7 @@ void init_queue()
 		socket_queue_handle == -1)
 	{
 		printf("Error Opening Queue\nERRNO: %d\n",errno);
-		exit(EXIT_FAILURE);
+		//exit(EXIT_FAILURE);
 	}
 	else
 	{
@@ -62,7 +62,7 @@ void *logThread(void *threadArgs)
     Message_t pMsg = {0};
     ThreadInfo_t info = {0};
 	info.data = pMsg;
-	char *msg=NULL;
+	char msg1[20] = {(uint8_t)'\0'};;
 	
 	FILE *pfile;
 	char *fileName = "logFile.txt";
@@ -89,10 +89,10 @@ void *logThread(void *threadArgs)
 					log_data(&pfile, &pMsg, fileName);
 					break;
 				case HEART_BEAT:
-					*msg = "Logger is alive";
+					sprintf(msg1,"Log Thread is Alive");
 					create_message_struct(&pMsg, LOGGER_THREAD,
 							MAINTHREAD, HEARTBEAT,
-							HEART_BEAT, msg);
+							HEART_BEAT, msg1);
 					info.data = pMsg;
 					info.thread_mutex_lock = main_queue_mutex;
 					info.qName = MAIN_QUEUE;
@@ -104,7 +104,7 @@ void *logThread(void *threadArgs)
 					break;
 			}
 		}
-		sleep(1);
+		//sleep(1);
 	}
 }
 
@@ -117,6 +117,7 @@ void *tempThread(void *threadArgs)
 	
 	float temp_val = 20.5; // will be removed when integrated
 	char msg[20] = {(uint8_t)'\0'};
+	char msg1[20] = {(uint8_t)'\0'};
 	/* floating point value to ascii */
 	sprintf(msg,"Temp Value: %0.3fC",temp_val);
 	create_message_struct(&temp_msg, TEMP_THREAD,
@@ -130,7 +131,7 @@ void *tempThread(void *threadArgs)
 		info.qName = LOGGER_QUEUE;
 		msg_send(&info);
 		
-		sleep(1);
+		//sleep(1);
 		while (temp_flag)
 		{
 			temp_flag--;
@@ -144,10 +145,10 @@ void *tempThread(void *threadArgs)
 			switch(temp_msg.requestId)
 			{
 				case HEART_BEAT:
-					*msg = "Temp Thread is alive";
+					sprintf(msg1,"Temp Thread is Alive");
 					create_message_struct(&temp_msg, TEMP_THREAD,
 							MAINTHREAD, HEARTBEAT,
-							HEART_BEAT, msg);
+							HEART_BEAT, msg1);
 					info.data = temp_msg;
 					info.thread_mutex_lock = main_queue_mutex;
 					info.qName = MAIN_QUEUE;
@@ -181,6 +182,7 @@ void *lightThread(void *threadArgs)
 	
 	float light_val = 20.5; // will be removed when integrated
 	char msg[20] = {(uint8_t)'\0'};
+	char msg1[20] = {(uint8_t)'\0'};
 	/* floating point value to ascii */
 	sprintf(msg,"Light Value: %0.3f",light_val);
 	create_message_struct(&light_msg, LIGHT_THREAD,
@@ -194,7 +196,7 @@ void *lightThread(void *threadArgs)
 		info.qName = LOGGER_QUEUE;
 		msg_send(&info);
 		
-		sleep(1);
+		//sleep(1);
 		while (light_flag)
 		{
 			light_flag--;
@@ -208,10 +210,10 @@ void *lightThread(void *threadArgs)
 			switch(light_msg.requestId)
 			{
 				case HEART_BEAT:
-					*msg = "Light Thread is alive";
+					sprintf(msg1,"Light Thread is Alive");
 					create_message_struct(&light_msg, LIGHT_THREAD,
 							MAINTHREAD, HEARTBEAT,
-							HEART_BEAT, msg);
+							HEART_BEAT, msg1);
 					info.data = light_msg;
 					info.thread_mutex_lock = main_queue_mutex;
 					info.qName = MAIN_QUEUE;
@@ -248,6 +250,7 @@ void *lightThread(void *threadArgs)
 
 void *socketThread(void *threadArgs)
 {
+	
 }
 
 int main()
@@ -290,8 +293,48 @@ int main()
     {
 	printf("Thread Creation failed, error code - %d\n", isThreadCreated);
     }
-	
-    /* join the pthread with the existing processes */
+    
+    /* HEART BEAT */
+    //request_heartbeat();
+    Message_t main_msg = {0};
+    ThreadInfo_t info = {0};
+	info.data = main_msg;
+	while(1){
+    while(main_flag)
+    {
+    	main_flag--;
+    	info.thread_mutex_lock = main_queue_mutex;
+		info.qName = MAIN_QUEUE;
+		msg_receive(&info);
+		
+		main_msg = info.data;
+		if (main_msg.requestId = HEART_BEAT)
+		{
+			FILE *pfile;
+			char *fileName = "logFile.txt";
+			printf ("Source ID: %d \n", main_msg.sourceId);
+			printf ("Timestamp: %s", ctime(&main_msg.timeStamp));
+			printf ("Log Level: %s \n", levels[main_msg.type]);
+			printf ("Message Data: %s \n", main_msg.msg);
+			log_data(&pfile, &main_msg, fileName);
+			/*switch(main_msg.sourceId)
+			{
+				case LOGGER_THREAD:
+					break;
+				case TEMP_THREAD:
+					break;
+				case LIGHT_THREAD:
+					break;
+				case SOCKET_THREAD:
+					break;
+				default:
+					break;
+			}*/
+			printf("It is here\n");
+		}
+    }
+    }
+    /* join the pthread with the existing processes */ 
     pthread_join(threads[TEMP_THREAD], NULL);
     pthread_join(threads[LIGHT_THREAD], NULL);
     pthread_join(threads[SOCKET_THREAD], NULL);
