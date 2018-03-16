@@ -26,7 +26,7 @@ int32_t i2c_write_byte(int32_t dev_fp, uint8_t reg_addr,
 }
 
 int32_t i2c_read_byte(int32_t dev_fp, uint8_t reg_addr,
-                     int8_t *rbuff, uint32_t num)
+                     uint8_t *rbuff, uint32_t num)
 {
   int32_t ret;
   reg_addr |= 0x80;
@@ -97,7 +97,7 @@ int32_t i2c_write_word_mutex(int32_t dev_fp, uint8_t reg_addr,
 }
 
 int32_t i2c_read_byte_mutex(int32_t dev_fp, uint8_t reg_addr,
-                           int8_t *rbuff)
+                           uint8_t *rbuff)
 {
   int32_t ret = 0;
   pthread_mutex_lock(&lock.mutex);
@@ -121,7 +121,7 @@ int32_t i2c_read_byte_mutex(int32_t dev_fp, uint8_t reg_addr,
 }
 
 int32_t i2c_read_word_mutex(int32_t dev_fp, uint8_t reg_addr,
-                            int16_t * rbuff)
+                            uint16_t * rbuff)
 {
   int32_t ret = 0;
   pthread_mutex_lock(&lock.mutex);

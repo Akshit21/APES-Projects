@@ -1,0 +1,29 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <signal.h>
+#include <fcntl.h>
+#include <pthread.h>
+#include <math.h>
+#include <string.h>
+#include <sys/signal.h>
+#include <sys/time.h>
+#include <errno.h>
+#include <semaphore.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <time.h>
+
+#include "task.h"
+#include "user_i2c.h"
+#include "apds9301.h"
+#include "tmp1021.h"
+#include "helper.h"
+
+#define SENSOR_STARTUP_TEST
+#define TEMP_TASK
+#define TEMP_TASK_ALERT
+#define LIGHT_TASK
+#define LIGHT_TASK_ALERT
+#define SOCKET_TASK

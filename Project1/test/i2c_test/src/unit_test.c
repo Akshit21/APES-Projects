@@ -1,13 +1,9 @@
-#include <stdio.h>
-#include <stdint.h>
+
 #include <stdarg.h>
 #include <stddef.h>
 #include <setjmp.h>
 #include <cmocka.h>
-
-#include "user_i2c.h"
-#include "apds9301.h"
-
+#include "project.h"
 
 void test_apds9301(void** state)
 {
@@ -26,15 +22,10 @@ void test_apds9301(void** state)
 
   /* Test setting up thresholds and interrupt */
   assert_int_equal(i2c_write_word_mutex(apds_handle, CMD|WORD|THRESHLOW_REG,
-                                        (uint16_t)DEFAULT_THRESHLOW_VALUE), 0);
+                                        (uint16_t)DEFAULT_THRESH_VALUE), 0);
   assert_int_equal(i2c_read_word_mutex(apds_handle, CMD|WORD|THRESHLOW_REG,
                                        &read_word), 0);
-  assert_true(read_word == (int16_t)DEFAULT_THRESHLOW_VALUE);
-  assert_int_equal(i2c_write_word_mutex(apds_handle, CMD|WORD|THRESHHIGH_REG,
-                                        (uint16_t)DEFAULT_THRESHHIGH_VALUE), 0);
-  assert_int_equal(i2c_read_word_mutex(apds_handle, CMD|WORD|THRESHHIGH_REG,
-                                       &read_word), 0);
-  assert_true(read_word == (int16_t)DEFAULT_THRESHHIGH_VALUE);
+  assert_true(read_word == (int16_t)DEFAULT_THRESH_VALUE);
   assert_int_equal(i2c_write_byte_mutex(apds_handle, CMD | INTERRUPT_REG,
                                         (uint8_t)DEFAULT_INTERRUPT_SETTING), 0);
   assert_int_equal(i2c_read_byte_mutex(apds_handle, CMD | INTERRUPT_REG,

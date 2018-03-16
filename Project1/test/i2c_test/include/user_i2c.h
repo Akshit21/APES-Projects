@@ -22,9 +22,9 @@ int32_t i2c_write_byte_mutex(int32_t dev_fp, uint8_t reg_addr,
 int32_t i2c_write_word_mutex(int32_t dev_fp, uint8_t reg_addr,
                             uint16_t value);
 int32_t i2c_read_byte_mutex(int32_t dev_fp, uint8_t reg_addr,
-                            int8_t *rbuff);
+                            uint8_t *rbuff);
 int32_t i2c_read_word_mutex(int32_t dev_fp, uint8_t reg_addr,
-                            int16_t *rbuff);
+                            uint16_t *rbuff);
 int32_t i2c_connect_mutex(int32_t *dev_fp, int32_t dev_addr);
 void i2c_disconnect_mutex(int32_t dev_fp);
 
