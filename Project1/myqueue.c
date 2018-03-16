@@ -62,6 +62,7 @@ void *logThread(void *threadArgs)
     Message_t pMsg = {0};
     ThreadInfo_t info = {0};
 	info.data = pMsg;
+	char *msg=NULL;
 	
 	FILE *pfile;
 	char *fileName = "logFile.txt";
@@ -69,8 +70,7 @@ void *logThread(void *threadArgs)
 	
 	while (1) 
 	{
-	
-		while (log_flag) // change to if flag set then process the data
+		while (log_flag)
 		{
 			log_flag--;
 			
@@ -88,6 +88,18 @@ void *logThread(void *threadArgs)
 					printf ("Message Data: %s \n", pMsg.msg);
 					log_data(&pfile, &pMsg, fileName);
 					break;
+				case HEART_BEAT:
+					*msg = "Logger is alive";
+					create_message_struct(&pMsg, LOGGER_THREAD,
+							MAINTHREAD, HEARTBEAT,
+							HEART_BEAT, msg);
+					info.data = pMsg;
+					info.thread_mutex_lock = main_queue_mutex;
+					info.qName = MAIN_QUEUE;
+					msg_send(&info);
+					break;
+				case SHUT_DOWN:
+					break; //EXIT CODE
 				default:
 					break;
 			}
@@ -103,7 +115,10 @@ void *tempThread(void *threadArgs)
 	ThreadInfo_t info;
 	Message_t temp_msg;
 	
-	char *msg = "Temp is 25C";
+	float temp_val = 20.5; // will be removed when integrated
+	char msg[20] = {(uint8_t)'\0'};
+	/* floating point value to ascii */
+	sprintf(msg,"Temp Value: %0.3fC",temp_val);
 	create_message_struct(&temp_msg, TEMP_THREAD,
 						  LOGGERTHREAD, INFO,
 						  LOG_MSG, msg);
@@ -116,6 +131,44 @@ void *tempThread(void *threadArgs)
 		msg_send(&info);
 		
 		sleep(1);
+		while (temp_flag)
+		{
+			temp_flag--;
+			
+			//info.data = {0};
+			info.thread_mutex_lock = temp_queue_mutex;
+			info.qName = TEMP_QUEUE;
+			msg_receive(&info);
+			
+			temp_msg = info.data;
+			switch(temp_msg.requestId)
+			{
+				case HEART_BEAT:
+					*msg = "Temp Thread is alive";
+					create_message_struct(&temp_msg, TEMP_THREAD,
+							MAINTHREAD, HEARTBEAT,
+							HEART_BEAT, msg);
+					info.data = temp_msg;
+					info.thread_mutex_lock = main_queue_mutex;
+					info.qName = MAIN_QUEUE;
+					msg_send(&info);
+					break;
+				case SHUT_DOWN:
+					break; //EXIT CODE
+				case GET_TEMP:
+					// Get the temperature value for external request
+					create_message_struct(&temp_msg, TEMP_THREAD,
+							SOCKETTHREAD, INFO,
+							GET_TEMP, msg);
+					info.data = temp_msg;
+					info.thread_mutex_lock = socket_queue_mutex;
+					info.qName = SOCKET_QUEUE;
+					msg_send(&info);
+					break;
+				default:
+					break;
+			}
+		}
     }
 }
 
@@ -126,8 +179,11 @@ void *lightThread(void *threadArgs)
 	ThreadInfo_t info;
 	Message_t light_msg;
 	
-	char *msg = "Light is Bright";
-	create_message_struct(&light_msg, TEMP_THREAD,
+	float light_val = 20.5; // will be removed when integrated
+	char msg[20] = {(uint8_t)'\0'};
+	/* floating point value to ascii */
+	sprintf(msg,"Light Value: %0.3f",light_val);
+	create_message_struct(&light_msg, LIGHT_THREAD,
 						  LOGGERTHREAD, INFO,
 						  LOG_MSG, msg);
 	
@@ -139,6 +195,54 @@ void *lightThread(void *threadArgs)
 		msg_send(&info);
 		
 		sleep(1);
+		while (light_flag)
+		{
+			light_flag--;
+			
+			//info.data = {0};
+			info.thread_mutex_lock = light_queue_mutex;
+			info.qName = LIGHT_QUEUE;
+			msg_receive(&info);
+			
+			light_msg = info.data;
+			switch(light_msg.requestId)
+			{
+				case HEART_BEAT:
+					*msg = "Light Thread is alive";
+					create_message_struct(&light_msg, LIGHT_THREAD,
+							MAINTHREAD, HEARTBEAT,
+							HEART_BEAT, msg);
+					info.data = light_msg;
+					info.thread_mutex_lock = main_queue_mutex;
+					info.qName = MAIN_QUEUE;
+					msg_send(&info);
+					break;
+				case SHUT_DOWN:
+					break; //EXIT CODE
+				case GET_LIGHT:
+					// Get the light value for external request
+					create_message_struct(&light_msg, LIGHT_THREAD,
+							SOCKETTHREAD, INFO,
+							GET_LIGHT, msg);
+					info.data = light_msg;
+					info.thread_mutex_lock = socket_queue_mutex;
+					info.qName = SOCKET_QUEUE;
+					msg_send(&info);
+					break;
+				case GET_LIGHT_STATE:
+					// Get the light state for external request
+					create_message_struct(&light_msg, LIGHT_THREAD,
+							SOCKETTHREAD, INFO,
+							GET_LIGHT, msg);
+					info.data = light_msg;
+					info.thread_mutex_lock = socket_queue_mutex;
+					info.qName = SOCKET_QUEUE;
+					msg_send(&info);
+					break;
+				default:
+					break;
+			}
+		}
     }
 }
 

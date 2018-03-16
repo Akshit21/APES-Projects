@@ -42,7 +42,7 @@ typedef enum _RequesId_t
     LOG_MSG,
     GET_TEMP,
     GET_LIGHT,
-    GET_LUX,
+    GET_LIGHT_STATE,
     SHUT_DOWN,
     
     /*Add new states above this line*/
