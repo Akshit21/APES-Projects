@@ -22,14 +22,8 @@
 
 typedef enum _Status_t
 {
-    SUCCESS,
-    ERROR_READ,
-    ERROR_WRITE,
-    ERROR_OPEN,
-	ERROR_CLOSE,
-    ERROR_ADDR,
-    ERROR_DATA,
-    NULL_PTR,
+	ERROR,
+    SUCCESS, 
     
     /*Add new states above this line*/
     ERROR_MAX
@@ -104,14 +98,15 @@ typedef struct _ThreadInfo_t
 } ThreadInfo_t;
 
 /*FUNCTION PROTOTYPES*/
-void create_message_struct( Message_t *pMsg, Source_t src,
-							Dest_t dest, LogLevel_t level,
-							RequestId_t req, char *msg);
+Message_t create_message_struct(Source_t src, Dest_t dest, LogLevel_t level,
+							RequestId_t req);
+void update_flag(Dest_t dest);
+
 Status_t log_data(FILE **pfile, Message_t *message, char *fileName);
 Status_t get_log_file(FILE **pfile, char *fileName);
-void update_flag(Dest_t dest);
-void msg_send(ThreadInfo_t *info);
-void msg_receive(ThreadInfo_t *info);
-void request_heartbeat();
+Status_t msg_send(ThreadInfo_t *info);
+Status_t msg_receive(ThreadInfo_t *info);
+Status_t request_heartbeat();
+Status_t msg_log(ThreadInfo_t *info);
 
 #endif /* API_H_ */

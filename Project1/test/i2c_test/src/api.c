@@ -36,7 +36,7 @@ Status_t log_data(FILE **pfile, Message_t *message, char *fileName)
 	if((*pfile=fopen(fileName,"a+")) == NULL)
 	{
 		printf("Error in Creating/Opening File\n");
-		return ERROR_OPEN;
+		return ERROR;
 	}
 
 	char logData[100] = {(uint8_t)'\0'};
@@ -47,7 +47,7 @@ Status_t log_data(FILE **pfile, Message_t *message, char *fileName)
 	if(fwrite(logData, strlen(logData), 1, *pfile) < 0)
 	{
 		printf("Error in Writing Data");
-		return ERROR_WRITE;
+		return ERROR;
 	}
 
 	fclose(*pfile);
@@ -59,22 +59,26 @@ Status_t get_log_file(FILE **pfile, char *fileName)
 	if((*pfile=fopen(fileName,"w")) == NULL)
 	{
 		printf("Error in Creating File\n");
-		return ERROR_OPEN;
+		return ERROR;
 	}
 	//fclose(pfile);
 	return SUCCESS;
 }
 
-void create_message_struct( Message_t *pMsg, Source_t src,
-							Dest_t dest, LogLevel_t level,
-							RequestId_t req, char *msg)
+Message_t create_message_struct(Source_t src, Dest_t dest, LogLevel_t level,
+							RequestId_t req)
 {
+	Message_t pMsg;
+	
 	pMsg->sourceId = src;
 	pMsg->destId = dest;
 	pMsg->type = level;
 	pMsg->requestId = req;
 	pMsg->timeStamp = time(NULL);
 	memcpy(pMsg->msg,msg,strlen(msg));
+	memset(pMsg->msg, 0, sizeof(pMsg->msg));
+	
+	return pMsg
 }
 
 void update_flag(Dest_t dest)
@@ -101,7 +105,7 @@ void update_flag(Dest_t dest)
 	}
 }
 
-void msg_send(ThreadInfo_t *info)
+Status_t msg_send(ThreadInfo_t *info)
 {
 	struct mq_attr attr;
 	attr.mq_maxmsg = 20;
@@ -116,15 +120,17 @@ void msg_send(ThreadInfo_t *info)
 	if(mq_send(queue_handle, (char*)&info->data, sizeof(info->data), 0) == -1)
 	{
 		perror("QUEUE SEND ERROR");
-		exit(EXIT_FAILURE);
+		return ERROR;
+		//exit(EXIT_FAILURE);
 	}
 	mq_close(queue_handle);
 	update_flag(info->data.destId);
 	pthread_mutex_unlock(&info->thread_mutex_lock);
 	sleep(1);
+	return SUCCESS;
 }
 
-void msg_receive(ThreadInfo_t *info)
+Status_t msg_receive(ThreadInfo_t *info)
 {
 	struct mq_attr attr;
 	attr.mq_maxmsg = 20;
@@ -139,30 +145,21 @@ void msg_receive(ThreadInfo_t *info)
 	if(mq_receive(queue_handle, (char*)&info->data, 1024, 0) == -1)
 	{
 		perror("QUEUE SEND ERROR");
-		exit(EXIT_FAILURE);
+		return ERROR;
+		//exit(EXIT_FAILURE);
 	}
 	mq_close(queue_handle);
 	pthread_mutex_unlock(&info->thread_mutex_lock);
 	sleep(1);
+	return SUCCESS;
 }
 
-void msg_log(Source_t sourceId, LogLevel_t type, char *msg)
+Status_t msg_log(ThreadInfo_t *info)
 {
-	/*Populate the message structure*/
-	Message_t log_msg = {0};
-	create_message_struct(&log_msg, sourceId,
-						  LOGGERTHREAD, type,
-						  LOG_MSG, msg);
-
-	ThreadInfo_t info = {0};
-	info.data = log_msg;
-	info.thread_mutex_lock = log_queue_mutex;
-	info.qName = LOGGER_QUEUE;
-
-	msg_send(&info);
+	return msg_send(info);
 }
 
-void request_heartbeat()
+Status_t request_heartbeat()
 {
 	/*Populate the message structure*/
 	Message_t heartbeat_msg = {0};
@@ -177,26 +174,30 @@ void request_heartbeat()
 	info.data = heartbeat_msg;
 	info.thread_mutex_lock = log_queue_mutex;
 	info.qName = LOGGER_QUEUE;
-	msg_send(&info);
+	if (msg_send(&info) == ERROR)
+		return ERROR;
 
 	heartbeat_msg.destId = TEMPTHREAD;
 	/*Populate Thread Info Structure*/
 	info.data = heartbeat_msg;
 	info.thread_mutex_lock = temp_queue_mutex;
 	info.qName = TEMP_QUEUE;
-	msg_send(&info);
+	if (msg_send(&info) == ERROR)
+		return ERROR;
 
 	heartbeat_msg.destId = LIGHTTHREAD;
 	/*Populate Thread Info Structure*/
 	info.data = heartbeat_msg;
 	info.thread_mutex_lock = light_queue_mutex;
 	info.qName = LIGHT_QUEUE;
-	msg_send(&info);
+	if (msg_send(&info) == ERROR)
+		return ERROR;
 
 	heartbeat_msg.destId = SOCKETTHREAD;
 	/*Populate Thread Info Structure*/
 	info.data = heartbeat_msg;
 	info.thread_mutex_lock = socket_queue_mutex;
 	info.qName = SOCKET_QUEUE;
-	msg_send(&info);
+	if (msg_send(&info) == ERROR)
+		return ERROR;
 }
