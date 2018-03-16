@@ -21,11 +21,11 @@
 /********************************************
 * S T A N D A R D    I N C L U D E S
 *********************************************/
-#include<pthread.h>
-#include<stdio.h>
+#include <pthread.h>
+#include <stdio.h>
 #include<stdlib.h>
 #include<unistd.h>
-#include<mqueue.h>
+#include <mqueue.h>
 #include<sys/stat.h>
 #include<errno.h>
 #include<string.h>
@@ -38,7 +38,7 @@
 /********************************************
 * L O C A L   I N C L U D E S
 *********************************************/
-#include "logger.h"
+#include "api.h"
 #include "led.h"
 #include "myqueue.h"
 

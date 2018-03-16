@@ -11,12 +11,12 @@
 * @author : Akshit Shah
 * @date : 02/22/2018
 *
-* @file : logger.h
+* @file : api.h
 * @brief : This header file provides an abstraction of thread definations and initialization 
            variables.
 ***************************************************************************************************/
-#ifndef LOGGER_H_
-#define LOGGER_H_
+#ifndef API_H_
+#define API_H_
 
 #define MAX_PAYLOAD_SIZE (10)
 
@@ -35,7 +35,6 @@ typedef enum _Status_t
     ERROR_MAX
 } Status_t;
 
-
 typedef enum _RequesId_t
 {
     HEART_BEAT,
@@ -48,8 +47,7 @@ typedef enum _RequesId_t
     
     /*Add new states above this line*/
     REQUEST_MAX
-} RequesId_t;
-
+} RequestId_t;
 
 typedef enum _Source_t
 {
@@ -63,6 +61,17 @@ typedef enum _Source_t
     SOURCE_MAX
 } Source_t;
 
+typedef enum _Dest_t
+{
+    MAINTHREAD,
+    LOGGERTHREAD,
+    TEMPTHREAD,
+    LIGHTTHREAD,
+    SOCKETTHREAD,
+    
+    /*Add new states above this line*/
+    DEST_MAX
+} Dest_t;
 
 typedef enum _LogLevel_t
 {
@@ -76,19 +85,32 @@ typedef enum _LogLevel_t
     LEVEL_MAX
 } LogLevel_t;
 
-
 typedef struct _Message_t
 {
     Source_t sourceId;
+    Dest_t destId;
     LogLevel_t type;
-    RequesId_t requestId;
+    RequestId_t requestId;
     time_t timeStamp;
     char msg[MAX_PAYLOAD_SIZE];
 } Message_t;
 
-/*FUNCTION PROTOTYPES*/
-Status_t create_message_info(Message_t **message);
-Status_t log_data(FILE **pfile, Message_t *message);
-Status_t get_log_file(FILE **pfile, char *fileName);
+typedef struct _ThreadInfo_t
+{
+	Message_t data;
+	pthread_mutex_t thread_mutex_lock;
+	const char *qName;
+} ThreadInfo_t;
 
-#endif /* LOGGER_H_ */
+/*FUNCTION PROTOTYPES*/
+void create_message_struct( Message_t *pMsg, Source_t src,
+							Dest_t dest, LogLevel_t level,
+							RequestId_t req, char *msg);
+Status_t log_data(FILE **pfile, Message_t *message, char *fileName);
+Status_t get_log_file(FILE **pfile, char *fileName);
+void update_flag(Dest_t dest);
+void msg_send(ThreadInfo_t *info);
+void msg_receive(ThreadInfo_t *info);
+void request_heartbeat();
+
+#endif /* API_H_ */

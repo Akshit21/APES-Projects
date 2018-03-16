@@ -18,12 +18,12 @@
 #ifndef MYQUEUE_H_
 #define MYQUEUE_H_
 
-#define LOGGER_QUEUE	("/QLogger")
-#define TEMP_QUEUE	("/QTemp")
-#define LIGHT_QUEUE	("/QLight")
-#define MAIN_QUEUE	("/QMain")
-#define SOCKET_QUEUE	("/QSocket")
-#define QUEUE_SIZE	(1024)
+#define LOGGER_QUEUE	"/qlogger"
+#define TEMP_QUEUE		"/qtemp"
+#define LIGHT_QUEUE		"/qlight"
+#define MAIN_QUEUE		"/qmain"
+#define SOCKET_QUEUE	"/qsocket"
+#define QUEUE_SIZE		(1024)
 
 /*synchronisation variables */
 pthread_mutex_t log_queue_mutex;
