@@ -21,10 +21,16 @@
 
 #include "main.h"
 
-int flag = 0;
+extern int log_flag, temp_flag, light_flag, socket_flag, main_flag;
+extern char *levels[];
 
 void init_queue()
 {
+
+	mq_unlink (LOGGER_QUEUE);
+	mq_unlink (TEMP_QUEUE);
+	mq_unlink (LIGHT_QUEUE);
+	
 	struct mq_attr attr;
 	attr.mq_maxmsg = 20;
 	attr.mq_msgsize = sizeof(Message_t);
@@ -41,7 +47,7 @@ void init_queue()
 		socket_queue_handle == -1)
 	{
 		printf("Error Opening Queue\nERRNO: %d\n",errno);
-		exit(EXIT_FAILURE);
+		//exit(EXIT_FAILURE);
 	}
 	else
 	{
@@ -53,83 +59,198 @@ void init_queue()
 void *logThread(void *threadArgs)
 {
     printf("In Logger Thread\n");
-    
-    struct mq_attr attr;
-	attr.mq_maxmsg = 20;
-	attr.mq_msgsize = sizeof(Message_t);
-	attr.mq_flags = 0;
-
-    /* Create a messaging structure */
-    Message_t msg={0};
-    FILE *pLogfile;
+    Message_t pMsg = {0};
+    ThreadInfo_t info = {0};
+	info.data = pMsg;
+	char msg1[20] = {(uint8_t)'\0'};;
 	
-	while(1)
+	FILE *pfile;
+	char *fileName = "logFile.txt";
+	get_log_file(&pfile, fileName);
+	
+	while (1) 
 	{
-		if (flag)
+		while (log_flag)
 		{
-			mqd_t log_queue_handle1 =  mq_open(LOGGER_QUEUE,O_RDWR | O_CREAT, S_IWUSR | S_IRUSR, NULL);
-
-			if(mq_receive(log_queue_handle1,(int8_t*)&msg, 1024, 0) != 0)
+			log_flag--;
+			
+			info.thread_mutex_lock = log_queue_mutex;
+			info.qName = LOGGER_QUEUE;
+			msg_receive(&info);
+			
+			pMsg = info.data;
+			switch(pMsg.requestId)
 			{
-				printf("Failed to receive any data for logging\n");
+				case LOG_MSG: 
+					printf ("Source ID: %d \n", pMsg.sourceId);
+					printf ("Timestamp: %s", ctime(&pMsg.timeStamp));
+					printf ("Log Level: %s \n", levels[pMsg.type]);
+					printf ("Message Data: %s \n", pMsg.msg);
+					log_data(&pfile, &pMsg, fileName);
+					break;
+				case HEART_BEAT:
+					sprintf(msg1,"Log Thread is Alive");
+					create_message_struct(&pMsg, LOGGER_THREAD,
+							MAINTHREAD, HEARTBEAT,
+							HEART_BEAT, msg1);
+					info.data = pMsg;
+					info.thread_mutex_lock = main_queue_mutex;
+					info.qName = MAIN_QUEUE;
+					msg_send(&info);
+					break;
+				case SHUT_DOWN:
+					break; //EXIT CODE
+				default:
+					break;
 			}
-			//pthread_mutex_lock(&log_queue_mutex);
-			
-			if(msg.requestId == LOG_MSG)
-			{
-				printf ("Source ID: %d \n", msg.sourceId);
-				printf ("Timestamp: %s \n", ctime(&msg.timeStamp));
-				printf ("Log Level: %d \n", msg.type);
-				printf ("Message Data: %s \n", msg.msg);
-			}
-			
-			mq_close(log_queue_handle1);
-			break;
-			
-			//pthread_mutex_unlock(&log_queue_mutex);
 		}
+		//sleep(1);
 	}
 }
 
 void *tempThread(void *threadArgs)
 {
 	printf("In Temp Thread\n");
-	//pthread_mutex_lock(&log_queue_mutex);
+	
+	ThreadInfo_t info;
 	Message_t temp_msg;
-
-	temp_msg.sourceId = TEMP_THREAD;
-	temp_msg.type = INFO;
-	temp_msg.requestId = LOG_MSG;
-	temp_msg.timeStamp =  time(NULL);
-	char my_msg[] = "Temp is 25C";
-	memcpy(&temp_msg.msg,&my_msg,sizeof(my_msg));
 	
-	struct mq_attr attr;
-	attr.mq_maxmsg = 256;
-	attr.mq_msgsize = sizeof(Message_t);
-	attr.mq_flags = 0;
-
-	mqd_t log_queue_handle1 =  mq_open(LOGGER_QUEUE,O_RDWR | O_CREAT, S_IWUSR | S_IRUSR, NULL);	
+	float temp_val = 20.5; // will be removed when integrated
+	char msg[20] = {(uint8_t)'\0'};
+	char msg1[20] = {(uint8_t)'\0'};
+	/* floating point value to ascii */
+	sprintf(msg,"Temp Value: %0.3fC",temp_val);
+	create_message_struct(&temp_msg, TEMP_THREAD,
+						  LOGGERTHREAD, INFO,
+						  LOG_MSG, msg);
 	
-	if(mq_send(log_queue_handle1, (int8_t*)&temp_msg, sizeof(Message_t), 0) != 0)
+	while(1)
 	{
-		perror("QUEUE SEND ERROR");
-        //exit(EXIT_FAILURE); 
-	}
-	else
-	{
-		flag = 1; 
-	}
-	mq_close(log_queue_handle1);
-	//pthread_mutex_unlock(&log_queue_mutex);
+		info.data = temp_msg;
+		info.thread_mutex_lock = log_queue_mutex;
+		info.qName = LOGGER_QUEUE;
+		msg_send(&info);
+		
+		//sleep(1);
+		while (temp_flag)
+		{
+			temp_flag--;
+			
+			//info.data = {0};
+			info.thread_mutex_lock = temp_queue_mutex;
+			info.qName = TEMP_QUEUE;
+			msg_receive(&info);
+			
+			temp_msg = info.data;
+			switch(temp_msg.requestId)
+			{
+				case HEART_BEAT:
+					sprintf(msg1,"Temp Thread is Alive");
+					create_message_struct(&temp_msg, TEMP_THREAD,
+							MAINTHREAD, HEARTBEAT,
+							HEART_BEAT, msg1);
+					info.data = temp_msg;
+					info.thread_mutex_lock = main_queue_mutex;
+					info.qName = MAIN_QUEUE;
+					msg_send(&info);
+					break;
+				case SHUT_DOWN:
+					break; //EXIT CODE
+				case GET_TEMP:
+					// Get the temperature value for external request
+					create_message_struct(&temp_msg, TEMP_THREAD,
+							SOCKETTHREAD, INFO,
+							GET_TEMP, msg);
+					info.data = temp_msg;
+					info.thread_mutex_lock = socket_queue_mutex;
+					info.qName = SOCKET_QUEUE;
+					msg_send(&info);
+					break;
+				default:
+					break;
+			}
+		}
+    }
 }
 
 void *lightThread(void *threadArgs)
 {
+	printf("In Light Thread\n");
+		
+	ThreadInfo_t info;
+	Message_t light_msg;
+	
+	float light_val = 20.5; // will be removed when integrated
+	char msg[20] = {(uint8_t)'\0'};
+	char msg1[20] = {(uint8_t)'\0'};
+	/* floating point value to ascii */
+	sprintf(msg,"Light Value: %0.3f",light_val);
+	create_message_struct(&light_msg, LIGHT_THREAD,
+						  LOGGERTHREAD, INFO,
+						  LOG_MSG, msg);
+	
+	while(1)
+	{
+		info.data = light_msg;
+		info.thread_mutex_lock = log_queue_mutex;
+		info.qName = LOGGER_QUEUE;
+		msg_send(&info);
+		
+		//sleep(1);
+		while (light_flag)
+		{
+			light_flag--;
+			
+			//info.data = {0};
+			info.thread_mutex_lock = light_queue_mutex;
+			info.qName = LIGHT_QUEUE;
+			msg_receive(&info);
+			
+			light_msg = info.data;
+			switch(light_msg.requestId)
+			{
+				case HEART_BEAT:
+					sprintf(msg1,"Light Thread is Alive");
+					create_message_struct(&light_msg, LIGHT_THREAD,
+							MAINTHREAD, HEARTBEAT,
+							HEART_BEAT, msg1);
+					info.data = light_msg;
+					info.thread_mutex_lock = main_queue_mutex;
+					info.qName = MAIN_QUEUE;
+					msg_send(&info);
+					break;
+				case SHUT_DOWN:
+					break; //EXIT CODE
+				case GET_LIGHT:
+					// Get the light value for external request
+					create_message_struct(&light_msg, LIGHT_THREAD,
+							SOCKETTHREAD, INFO,
+							GET_LIGHT, msg);
+					info.data = light_msg;
+					info.thread_mutex_lock = socket_queue_mutex;
+					info.qName = SOCKET_QUEUE;
+					msg_send(&info);
+					break;
+				case GET_LIGHT_STATE:
+					// Get the light state for external request
+					create_message_struct(&light_msg, LIGHT_THREAD,
+							SOCKETTHREAD, INFO,
+							GET_LIGHT, msg);
+					info.data = light_msg;
+					info.thread_mutex_lock = socket_queue_mutex;
+					info.qName = SOCKET_QUEUE;
+					msg_send(&info);
+					break;
+				default:
+					break;
+			}
+		}
+    }
 }
 
 void *socketThread(void *threadArgs)
 {
+	
 }
 
 int main()
@@ -137,12 +258,13 @@ int main()
     int32_t isThreadCreated = 0;
     
     /* Main Task Handling Code will come here */
-    //init_queue();
+    init_queue();
 
     pthread_mutex_init(&log_queue_mutex,NULL);
 	pthread_mutex_init(&temp_queue_mutex,NULL);
 	pthread_mutex_init(&main_queue_mutex,NULL);
 	pthread_mutex_init(&light_queue_mutex,NULL);
+	pthread_mutex_init(&socket_queue_mutex,NULL);
 
     /* Create Logging Thread */
     isThreadCreated = pthread_create(&threads[LOG_THREAD],NULL,&logThread,NULL);
@@ -158,25 +280,64 @@ int main()
 	printf("Thread Creation failed, error code - %d\n", isThreadCreated);
     }
 
-    /* Create Light Thread 
+    /* Create Light Thread */
     isThreadCreated = pthread_create(&threads[LIGHT_THREAD],NULL,&lightThread,NULL);
     if(isThreadCreated != 0)
     {
 	printf("Thread Creation failed, error code - %d\n", isThreadCreated);
-    }*/
+    }
 
-    /* Create Socket Thread 
+    /* Create Socket Thread */
     isThreadCreated = pthread_create(&threads[SOCKET_THREAD],NULL,&socketThread,NULL);
     if(isThreadCreated != 0)
     {
 	printf("Thread Creation failed, error code - %d\n", isThreadCreated);
     }
-	*/
-	
-    /* join the pthread with the existing processes */
+    
+    /* HEART BEAT */
+    //request_heartbeat();
+    Message_t main_msg = {0};
+    ThreadInfo_t info = {0};
+	info.data = main_msg;
+	while(1){
+    while(main_flag)
+    {
+    	main_flag--;
+    	info.thread_mutex_lock = main_queue_mutex;
+		info.qName = MAIN_QUEUE;
+		msg_receive(&info);
+		
+		main_msg = info.data;
+		if (main_msg.requestId = HEART_BEAT)
+		{
+			FILE *pfile;
+			char *fileName = "logFile.txt";
+			printf ("Source ID: %d \n", main_msg.sourceId);
+			printf ("Timestamp: %s", ctime(&main_msg.timeStamp));
+			printf ("Log Level: %s \n", levels[main_msg.type]);
+			printf ("Message Data: %s \n", main_msg.msg);
+			log_data(&pfile, &main_msg, fileName);
+			/*switch(main_msg.sourceId)
+			{
+				case LOGGER_THREAD:
+					break;
+				case TEMP_THREAD:
+					break;
+				case LIGHT_THREAD:
+					break;
+				case SOCKET_THREAD:
+					break;
+				default:
+					break;
+			}*/
+			printf("It is here\n");
+		}
+    }
+    }
+    /* join the pthread with the existing processes */ 
     pthread_join(threads[TEMP_THREAD], NULL);
-    //pthread_join(threads[LIGHT_THREAD], NULL);
-    //pthread_join(threads[SOCKET_THREAD], NULL);
+    pthread_join(threads[LIGHT_THREAD], NULL);
+    pthread_join(threads[SOCKET_THREAD], NULL);
     pthread_join(threads[LOG_THREAD], NULL);
 
     return 0;
