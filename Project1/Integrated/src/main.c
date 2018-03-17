@@ -6,7 +6,6 @@ int main(int argc, char const *argv[])
   pthread_t thread1, thread2, thread3, thread4;
   int32_t tmp_handle, apds_handle;
 
-
   /* Connect the sensor */
 #ifdef TEMP_TASK
   if(tmp1021_init(&tmp_handle)==-1)
@@ -57,9 +56,12 @@ int main(int argc, char const *argv[])
   //request_heartbeat();
   Message_t main_msg = {0};
   ThreadInfo_t info = {0};
+  uint32_t chance = 0;
+  uint32_t heartbeat_monitor[4] = {0};
   while(1)
   {
     request_heartbeat();
+    chance++;
     while(main_queue_flag)
     {
 	    main_queue_flag--;
@@ -75,21 +77,33 @@ int main(int argc, char const *argv[])
         printf ("Timestamp: %s", ctime(&main_msg.timeStamp));
         printf ("Log Level: %s \n", levels[main_msg.type]);
         printf ("Message Data: %s \n", main_msg.msg);
-        switch(main_msg.sourceId)
-        {
-          case 1:
-            break;
-          case 2:
-            break;
-          case 3:
-            break;
-          case 4:
-            break;
-          default:;
-        }
+        heartbeat_monitor[main_msg.sourceId - 1]++;
       }
     }
     sleep(5);
+    if(chance == 3)
+    {
+      chance = 0;
+      for(int i=4; i>0; i--)
+      {
+        if(heartbeat_monitor[i-1] == 0)
+        {
+          printf("Call Cleanup\n");
+          /*Try logging if Logger Thread is active*/
+          if(heartbeat_monitor[0])
+          {
+            memset(&info,0,sizeof(info));
+            info.data = create_message_struct(MAIN_THREAD,LOGGERTHREAD,ERROR_MSG,LOG_MSG);
+            info.data.msg = "SHUTTING DOWN THE SYSTEM: Thread Inactive";
+            info.thread_mutex_lock = log_queue_mutex;
+            info.qName = LOGGER_QUEUE;
+            mq_send(&info);
+          }
+          //Cleanup_routine();
+        }
+        heartbeat_monitor[i-1] = 0;
+      }
+    }
   }
 #endif
   /* Wait for child threads */
