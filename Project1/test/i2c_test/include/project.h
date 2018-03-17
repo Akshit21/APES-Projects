@@ -17,9 +17,12 @@
 #include <semaphore.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 #include <time.h>
 #include <mqueue.h>
 #include <sys/types.h>
+
 #include "task.h"
 #include "user_i2c.h"
 #include "apds9301.h"
