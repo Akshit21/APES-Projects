@@ -38,13 +38,15 @@ typedef enum _Status_t
 
 typedef enum _RequesId_t
 {
-    HEART_BEAT,
-    STARTUP_TEST,
     LOG_MSG,
-    GET_TEMP,
+    GET_TEMP_C,
+		GET_TEMP_K,
+		GET_TEMP_F,
     GET_LIGHT,
     GET_LIGHT_STATE,
     SHUT_DOWN,
+		HEART_BEAT,
+    STARTUP_TEST,
 
     /*Add new states above this line*/
     REQUEST_MAX
@@ -57,6 +59,7 @@ typedef enum _Source_t
     TEMP_THREAD,
     LIGHT_THREAD,
     SOCKET_THREAD,
+		SOCKET_CLIENT,
 
     /*Add new states above this line*/
     SOURCE_MAX
@@ -69,6 +72,7 @@ typedef enum _Dest_t
     TEMPTHREAD,
     LIGHTTHREAD,
     SOCKETTHREAD,
+		SOCKETCLIET,
 
     /*Add new states above this line*/
     DEST_MAX
