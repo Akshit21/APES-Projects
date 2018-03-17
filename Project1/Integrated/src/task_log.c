@@ -1,5 +1,7 @@
 #include "project.h"
 
+const char *colors[] = {"\x1b[0m", "\x1b[32m", "\x1b[35m", "\x1b[31m", "\x1b[36m", "\x1b[33m"};
+
 Status_t log_data(FILE **pfile, Message_t *message, const char *fileName);
 
 void *task_log(void *param)
@@ -75,9 +77,9 @@ Status_t log_data(FILE **pfile, Message_t *message, const char *fileName)
 	}
 
 	char logData[100] = {(uint8_t)'\0'};
-	sprintf(logData, "Task: %s\tTime: %s\n%s: %s\n\n",
-		task[message->sourceId], ctime(&message->timeStamp),
-		levels[message->type], message->msg);
+	sprintf(logData, "%s[%s]%s  Task: %s\tMessage: %s\tTime: %s\n\n",
+		colors[message->type + 1], levels[message->type], colors[0],
+    task[message->sourceId], message->msg, ctime(&message->timeStamp));
 
 	if(fwrite(logData, strlen(logData), 1, *pfile) < 0)
 	{
