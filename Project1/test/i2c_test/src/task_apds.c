@@ -31,9 +31,7 @@ void * task_light(void * param)
   float light;
   uint8_t op_flag = 0, retry = 0;
   Status_t status = SUCCESS;
-  const struct timespec sem_timeout;
-  sem_timeout.tv_sec = 1;
-  sem_timeout.tv_nsec = 0;
+  const struct timespec sem_timeout = {.tv_sec = 1, .tv_nsec=0};
   Message_t apds_msg;
   ThreadInfo_t info;
 
@@ -122,15 +120,16 @@ void * task_light(void * param)
 
     //light = apds_raw_to_lux(ch0_data, ch1_data);
     //printf("Light:%.2f\n", light);
+#ifdef LIGHT_TASK_MESSAGING
     /* Process message queue */;
 		while (light_queue_flag)
 		{
 			light_queue_flag--;
 
-		  memzero(&info.data.msg, sizeof(info.data.msg));
+		  memset(&info.data.msg, 0, sizeof(info.data.msg));
 			info.thread_mutex_lock = light_queue_mutex;
 			info.qName = LIGHT_QUEUE;
-      if((status = msg_receive(&info)!=SUCCESS)
+      if((status = msg_receive(&info))!=SUCCESS)
       {
 			  apds_msg = info.data;
 			  switch(apds_msg.requestId)
@@ -166,11 +165,11 @@ void * task_light(void * param)
 					  info.qName = SOCKET_QUEUE;
 					  msg_send(&info);
 					  break;
-				  default:
-					  break;
+				  default:;
 			  }
       }
 		}
+#endif
   }
 
   /* THread clean up routine */
@@ -179,7 +178,7 @@ void * task_light(void * param)
   i2c_disconnect_mutex(apds_handle);
   pthread_mutex_destroy(&light_queue_mutex);
   mq_unlink(LIGHT_QUEUE);
-  pthread_exit();
+  pthread_exit(NULL);
 }
 
 #endif

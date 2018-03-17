@@ -25,6 +25,15 @@ void tmp_timer_handler(union sigval arg)
   pthread_mutex_unlock(&tmp_mutex);
 }
 
+#ifdef TEMP_TASK_ALERT
+void tmp_irq_handler(int signo)
+{
+  if(signo == SIGIO)
+  {
+    
+  }
+}
+#endif
 
 /* Missing:
  * - Hearbeat report
@@ -41,7 +50,9 @@ void * task_tmp(void * param)
   timer_t timer_id;
   float temperature;
   uint8_t op_flag = 0, retry = 0;
-  int32_t initialized_flag = 1;
+  Status_t status = SUCCESS;
+  Message_t tmp_msg;
+  ThreadInfo_t info;
 
 #ifdef TEMP_TASK_ALERT
   /* Set up the pin interrupt for handling light alert */
@@ -51,34 +62,34 @@ void * task_tmp(void * param)
   if(sigaction(SIGIO, &tmp_irq_action, NULL)!=0)
   {
     // Error log
-    initialized_flag = 0;
+    status = ERROR;
   }
   if((tmp_irq_handle=open("/dev/gpio_tmp_int", O_RDWR))<0)
   {
     // Error log
-    initialized_flag = 0;
+    status = ERROR;
   }
   if(fcntl(tmp_irq_handle, F_SETOWN, getpid())==-1)
   {
     // Error log
-    initialized_flag = 0;
+    status = ERROR;
   }
   if(fcntl(tmp_irq_handle, F_SETFL,
      fcntl(tmp_irq_handle, F_GETFL) | FASYNC) == -1)
   {
     // Error log
-    initialized_flag = 0;
+    status = ERROR;
   }
 #endif
   /* Set up a periodic timer */
   if((timer_setup(&timer_id, TMP_PERIOD, tmp_timer_handler))==-1)
   {
   	// error;
-	  initialized_flag = 0;
+	  status = ERROR;
   }
 
   /* Periodic temperature read */
-  while(initialized_flag)
+  while(status == SUCCESS)
   {
     /* Processing all msg in the queue */
     /* - Heartbeat request from main
@@ -103,12 +114,60 @@ void * task_tmp(void * param)
     {
       // Error
       /* Break the loop and clean up */
-      break;
+      status = ERROR;
     }
-    /* Convert digital data format to temperature */
-    temperature = tmp_raw_to_temperature(tmp, CELSIUS_FORMAT);
-    /* Enqueue the temperature onto the msg queue */
-    printf("Temperature: %.2f\n", temperature);
+    else
+    {
+      /* Convert digital data format to temperature */
+      temperature = tmp_raw_to_temperature(tmp, CELSIUS_FORMAT);
+
+      /* Enqueue the temperature onto the msg queue */
+      tmp_msg = create_message_struct(TEMP_THREAD, LOGGERTHREAD, INFO, LOG_MSG);
+      sprintf(tmp_msg.msg,"Temperature Value: %0.3f degree C.",temperature);
+      info.data = tmp_msg;
+      info.thread_mutex_lock = log_queue_mutex;
+      info.qName = LOGGER_QUEUE;
+      status = msg_log(&info);
+      printf("Temperature: %.2f\n", temperature);
+    }
+
+#ifdef TEMP_TASK_MESSAGING
+    /* Process message queue */
+    while(temp_queue_flag)
+    {
+		  memset(&info.data.msg, 0, sizeof(info.data.msg));
+      temp_queue_flag --;
+      info.thread_mutex_lock = temp_queue_mutex;
+			info.qName = TEMP_QUEUE;
+			msg_receive(&info);
+			tmp_msg = info.data;
+			switch(tmp_msg.requestId)
+			{
+				case HEART_BEAT:
+					tmp_msg = create_message_struct(TEMP_THREAD, MAINTHREAD, HEARTBEAT,
+							HEART_BEAT);
+					info.data = tmp_msg;
+					info.thread_mutex_lock = main_queue_mutex;
+					info.qName = MAIN_QUEUE;
+					status = msg_send(&info);
+					break;
+				case SHUT_DOWN:
+          status = ERROR;
+					break; //EXIT CODE
+				case GET_TEMP:
+					// Get the temperature value for external request
+					tmp_msg = create_message_struct(TEMP_THREAD, tmp_msg.sourceId, INFO,
+							                            GET_TEMP);
+          sprintf(tmp_msg.msg,"Temperature Value: %0.3f degree C.",temperature);
+					info.data = tmp_msg;
+					info.thread_mutex_lock = socket_queue_mutex;
+					info.qName = SOCKET_QUEUE;
+					msg_send(&info);
+					break;
+				default:;
+			}
+    }
+#endif
   }
 
   /* Thread clean up routine */
@@ -116,8 +175,9 @@ void * task_tmp(void * param)
   pthread_cond_destroy(&tmp_cond);
   timer_delete(timer_id);
   i2c_disconnect_mutex(tmp_handle);
-  /* Enqueue task close message */
-  return;
+  pthread_mutex_destroy(&temp_queue_mutex);
+  mq_unlink(TEMP_QUEUE);
+  pthread_exit(NULL);
 }
 #endif
 
@@ -125,14 +185,14 @@ void * task_tmp(void * param)
  * Below are TMP1021 Utility APIs
  */
 
-int32_t tmp1021_init(int32_t dev_fp)
+int32_t tmp1021_init(int32_t *dev_fp)
 {
   /* Connect the tmp1021 to the i2c interface */
   if(i2c_connect_mutex(dev_fp, TMP1021_ADDR)!=0)
     return -1;
   /* Config the tmp1021 by default configuration */
-  if(i2c_write_word_mutex(dev_fp, CONFIG_REG, CONFIG_DEFAULT)!=0)
-    return -1;
+  // if(i2c_write_word_mutex(*dev_fp, CONFIG_REG, CONFIG_DEFAULT)!=0)
+  //   return -1;
 #ifdef TEMP_TASK_ALERT
   // Setup thresholds
 #endif

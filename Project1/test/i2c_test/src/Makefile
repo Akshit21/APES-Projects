@@ -10,7 +10,8 @@ CMOCKA_BUILD_DIR = ../cmocka/build-Debug
 #
 # library
 #
-LIB_SRCS = user_i2c.c helper.c task_apds.c task_socket.c task_tmp.c
+LIB_SRCS = user_i2c.c helper.c task_apds.c task_socket.c task_tmp.c task_log.c \
+          api.c
 LIB_OBJS = $(LIB_SRCS:%.c=%.o)
 LIB_INCLUDE_DIR = ../include
 LIB_HEADERS = $(LIB_SRCS:%.c=%.h)
