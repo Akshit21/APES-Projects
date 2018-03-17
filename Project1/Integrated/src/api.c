@@ -95,7 +95,7 @@ Status_t msg_send(ThreadInfo_t *info)
 	mq_close(queue_handle);
 	update_queue_flag(info->data.destId);
 	pthread_mutex_unlock(&info->thread_mutex_lock);
-	sleep(1);
+	//sleep(1);
 	return SUCCESS;
 }
 
@@ -119,7 +119,7 @@ Status_t msg_receive(ThreadInfo_t *info)
 	}
 	mq_close(queue_handle);
 	pthread_mutex_unlock(&info->thread_mutex_lock);
-	sleep(1);
+	//sleep(1);
 	return SUCCESS;
 }
 

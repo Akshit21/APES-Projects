@@ -235,19 +235,19 @@ static int32_t apds_update_state(int32_t dev_fp, uint32_t state)
     case LIGHT_STATE_DAY:
       light_state = LIGHT_STATE_NIGHT;
       if(i2c_write_word_mutex(dev_fp, CMD | WORD | THRESHLOW_REG,
-                          (uint16_t)DEFAULT_THRESH_VALUE)!=0)
+                          (uint16_t)THRESH_MIN)!=0)
         ret = -1;
       if(i2c_write_word_mutex(dev_fp, CMD | WORD | THRESHHIGH_REG,
-                          (uint16_t)THRESH_MAX)!=0)
+                          (uint16_t)DEFAULT_THRESH_VALUE)!=0)
         ret = -1;
       break;
     case LIGHT_STATE_NIGHT:
       light_state = LIGHT_STATE_DAY;
       if(i2c_write_word_mutex(dev_fp, CMD | WORD | THRESHLOW_REG,
-                          (uint16_t)THRESH_MIN)!=0)
+                          (uint16_t)DEFAULT_THRESH_VALUE)!=0)
         ret = -1;
       if(i2c_write_word_mutex(dev_fp, CMD | WORD | THRESHHIGH_REG,
-                          (uint16_t)DEFAULT_THRESH_VALUE)!=0)
+                          (uint16_t)THRESH_MAX)!=0)
         ret = -1;
       break;
     default:;

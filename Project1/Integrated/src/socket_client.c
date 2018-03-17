@@ -41,7 +41,8 @@ int main(int argc, char const *argv[])
       write(socketfd, &socket_msg_req, sizeof(socket_msg_req));
       sleep(2);
       read(socketfd, &socket_msg_resp, sizeof(socket_msg_resp));
-   	shutdown(socketfd, SHUT_RDWR);
+   	printf("read something\n");	
+      shutdown(socketfd, SHUT_RDWR);
       process_msg(&socket_msg_resp);
   }
   else

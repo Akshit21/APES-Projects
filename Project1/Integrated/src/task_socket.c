@@ -3,9 +3,9 @@
 void * task_socket(void* param)
 {
 
-  Message_t socket_msg = {0}
+  Message_t socket_msg = {0};
   ThreadInfo_t info = {0};
-
+	Status_t status;
   int socketfd, newsocketfd, portno=PORT_NO;
   /* Create a TCP/IP socket */
   socketfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -47,6 +47,7 @@ void * task_socket(void* param)
           case GET_TEMP_C:
           case GET_TEMP_K:
           case GET_TEMP_F:
+		printf("socket-----:request id:%d\n", socket_msg.requestId);
             socket_msg = create_message_struct(SOCKET_THREAD, TEMPTHREAD, INFO, socket_msg.requestId);
             info.data = socket_msg;
             memset(info.data.msg, 0, sizeof(info.data.msg));
@@ -70,7 +71,7 @@ void * task_socket(void* param)
             msg_send(&info);
             /*LOG THE REQUEST*/
             sprintf(info.data.msg, "Request from Client to get Light");
-            info.data.destId = LOGGETHREAD;
+            info.data.destId = LOGGERTHREAD;
             info.thread_mutex_lock = log_queue_mutex;
             info.qName = LOGGER_QUEUE;
             msg_send(&info);
@@ -79,36 +80,44 @@ void * task_socket(void* param)
             break;
         }
     }
-
+    sleep(5);
     /*Process the socket queue*/
     while(socket_queue_flag)
     {
+	    printf("sleeeeeeeeeeeeeeeee  %d    eeeeeeeeeeeeeeeeeeeeeeeep is good!!!\n", socket_queue_flag);
       socket_queue_flag--;
-      memset(info.data.msg, 0, sizeof(info.data.msg));
-      info.thread_mutex_lock = log_queue_mutex;
-      info.qName = LOGGER_QUEUE;
-      if((status = msg_receive(&info))==SUCCESS);
+      memset(&info.data, 0, sizeof(info.data));
+      info.thread_mutex_lock = socket_queue_mutex;
+      info.qName = SOCKET_QUEUE;
+      memset(&socket_msg, 0, sizeof(socket_msg));
+      if((status = msg_receive(&info))==SUCCESS)
       {
-        socket_msg = info.data;
+	socket_msg = info.data;
+	      printf("socket______now switch casee.....id: %d\n", socket_msg.requestId);
+	
         switch(socket_msg.requestId)
         {
           case HEART_BEAT:
+		  printf("socket_____hbbbbbbbb\n");
             socket_msg = create_message_struct(SOCKET_THREAD, MAINTHREAD, HEARTBEAT,
                                           HEART_BEAT);
             info.data = socket_msg;
             info.thread_mutex_lock = main_queue_mutex;
             info.qName = MAIN_QUEUE;
-            status = msg_send(&info);
+            //status = msg_send(&info);
+	    sprintf(socket_msg.msg, "ahsahsa");
+		write(newsocketfd, &socket_msg, sizeof(socket_msg));
             break;
           case GET_TEMP_C:
           case GET_TEMP_K:
           case GET_TEMP_F:
           case GET_LIGHT:
           case GET_LIGHT_STATE:
+	    printf("socket::::::::now about to write\n");
             write(newsocketfd, &socket_msg, sizeof(socket_msg));
+	    printf("socket::::::::write done\n");
             break;
-          default:
-            break;
+          default:printf("nothing.............\n");
         }
       }
     }
