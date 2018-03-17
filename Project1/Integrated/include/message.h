@@ -123,6 +123,7 @@ extern int32_t main_queue_flag;
 
 extern char *task[];
 extern char *levels[];
+
 /*FUNCTION PROTOTYPES*/
 Message_t create_message_struct(Source_t src, Dest_t dest, LogLevel_t level,
 							RequestId_t req);

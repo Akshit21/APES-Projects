@@ -166,7 +166,7 @@ void * task_tmp(void * param)
         case GET_TEMP_K:
 					DEBUG("[DEBUG] TMP task received GET_TEMP_K request.\n");
 					tmp_msg = create_message_struct(TEMP_THREAD, SOCKETTHREAD, INFO, GET_TEMP_K);
-          sprintf(tmp_msg.msg,"Temperature Value: %0.3f degree K.",temperature);
+          sprintf(tmp_msg.msg,"Temperature Value: %0.3f degree K.",temperature + 273.15);
 					info.data = tmp_msg;
 					info.thread_mutex_lock = socket_queue_mutex;
 					info.qName = SOCKET_QUEUE;
@@ -176,7 +176,7 @@ void * task_tmp(void * param)
         case GET_TEMP_F:
 					DEBUG("[DEBUG] TMP task received GET_TEMP_F request.\n"
 					tmp_msg = create_message_struct(TEMP_THREAD, SOCKETTHREAD, INFO, GET_TEMP_F);
-          sprintf(tmp_msg.msg,"Temperature Value: %0.3f degree F.",temperature);
+          sprintf(tmp_msg.msg,"Temperature Value: %0.3f degree F.",temperature*1.8 + 32);
 					info.data = tmp_msg;
 					info.thread_mutex_lock = socket_queue_mutex;
 					info.qName = SOCKET_QUEUE;

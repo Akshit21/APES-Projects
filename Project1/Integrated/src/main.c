@@ -15,7 +15,7 @@ int main(int argc, char const *argv[])
 #endif
 
 #ifdef LIGHT_TASK
-  if((statu = apds9301_init(&apds_handle))==ERRRO)
+  if((status = apds9301_init(&apds_handle))==ERRRO)
   {
     DEBUG("[DEBUF] Failed to initialize the apds9301 sensor.\n");
   }
@@ -60,11 +60,20 @@ int main(int argc, char const *argv[])
     exit(EXIT_FAILURE);
   }
 #endif
+
+/* Startup test sucessful */
+Message_t main_msg = {0};
+ThreadInfo_t info = {0};
+
+main_msg = create_message_struct(MAIN_THREAD, LOGGERTHREAD, INIT, LOG_MSG);
+sprintf(main_msg.msg,"STARTUP COMPLETE SUCCESSFULLY");
+info.data = main_msg;
+info.thread_mutex_lock = log_queue_mutex;
+info.qName = LOGGER_QUEUE;
+mq_send(&info);
+
 #ifdef MAIN_HEARTBEAT_REQUEST
   /* Heartbeat processing */
-  //request_heartbeat();
-  Message_t main_msg = {0};
-  ThreadInfo_t info = {0};
   uint32_t chance = 0;
   uint32_t heartbeat_monitor[4] = {0};
   while(1)
@@ -103,10 +112,11 @@ int main(int argc, char const *argv[])
           {
             memset(&info,0,sizeof(info));
             info.data = create_message_struct(MAIN_THREAD,LOGGERTHREAD,ERROR_MSG,LOG_MSG);
-            info.data.msg = "SHUTTING DOWN THE SYSTEM: Thread Inactive";
+            sprintf(info.data.msg,"SHUTTING DOWN THE SYSTEM: Thread Inactive");
             info.thread_mutex_lock = log_queue_mutex;
             info.qName = LOGGER_QUEUE;
             mq_send(&info);
+            sleep(5);/*Wait for logger thread to process*/
           }
           //Cleanup_routine();
         }
