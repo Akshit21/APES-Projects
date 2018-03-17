@@ -6,7 +6,7 @@ sem_t apds_sem;
 char *light_state_s[] = {"DAY", "NIGHT"};
 int32_t light_state;
 
-static int32_t apds_update_state(int32_t dev_fp, uint32_t state);
+static Status_t apds_update_state(int32_t dev_fp, uint32_t state);
 static float apds_raw_to_lux(int16_t ch0, int16_t ch1);
 
 #ifdef LIGHT_TASK_ALERT
@@ -197,32 +197,32 @@ Status_t apds9301_init(int32_t *dev_fp)
   uint16_t ch0_data;
   /* Connect the apds9301 to the i2c interface */
   if(i2c_connect_mutex(dev_fp, APDS9301_ADDR)!=0)
-    ret = ERROR;
+    return ERROR;
 
   /* Power on the sensor */
   if(i2c_write_byte_mutex(*dev_fp, CMD | CONTROL_REG, POWER_ON)!=0)
-    ret = ERROR;
+    return ERROR;
 
   /* Configure the alert thresholds */
 #ifdef LIGHT_TASK_ALERT
   /* Update the light state */
   if(i2c_read_word_mutex(*dev_fp, CMD | WORD | DATA0_REG, &ch0_data)!=0)
-    ret = ERROR;
+    return ERROR;
   light_state = ch0_data < DEFAULT_THRESH_VALUE ? LIGHT_STATE_DAY : LIGHT_STATE_NIGHT;
   /* Update the thresholds */
   if(apds_update_state(*dev_fp, light_state)==ERROR)
-    ret = ERROR;
+    return ERROR;
   /* Set up interrupt */
   if(i2c_write_byte_mutex(*dev_fp, CMD | INTERRUPT_REG,
                           (uint8_t)DEFAULT_INTERRUPT_SETTING)==-1)
-    ret = ERROR;
+    return ERROR;
 #endif
   if(i2c_write_byte_mutex(*dev_fp, CMD|CLEAR|CONTROL_REG, 0x03)==-1)
-	  ret = ERROR;
-  return ret;
+	  return ERROR;
+  return SUCCESS;
 }
 
-static status_t apds_update_state(int32_t dev_fp, uint32_t state)
+static Status_t apds_update_state(int32_t dev_fp, uint32_t state)
 {
   switch(state)
   {
@@ -230,19 +230,19 @@ static status_t apds_update_state(int32_t dev_fp, uint32_t state)
       light_state = LIGHT_STATE_NIGHT;
       if(i2c_write_word_mutex(dev_fp, CMD | WORD | THRESHLOW_REG,
                           (uint16_t)THRESH_MIN)!=0)
-        ret = ERROR;
+        return ERROR;
       if(i2c_write_word_mutex(dev_fp, CMD | WORD | THRESHHIGH_REG,
                           (uint16_t)DEFAULT_THRESH_VALUE)!=0)
-        ret = ERROR;
+        return ERROR;
       break;
     case LIGHT_STATE_NIGHT:
       light_state = LIGHT_STATE_DAY;
       if(i2c_write_word_mutex(dev_fp, CMD | WORD | THRESHLOW_REG,
                           (uint16_t)DEFAULT_THRESH_VALUE)!=0)
-        ret = ERROR;
+        return ERROR;
       if(i2c_write_word_mutex(dev_fp, CMD | WORD | THRESHHIGH_REG,
                           (uint16_t)THRESH_MAX)!=0)
-        ret = ERROR;
+        return ERROR;
       break;
     default:;
   }

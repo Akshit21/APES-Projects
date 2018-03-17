@@ -10,7 +10,7 @@ void * task_socket(void* param)
   struct sockaddr_in serv_addr;
 
   /* Create a TCP/IP socket */
-  if(socketfd = socket(AF_INET, SOCK_STREAM, 0))<0)
+  if((socketfd = socket(AF_INET, SOCK_STREAM, 0))<0)
   {
     perror("Failed to create a TCP/IP socket.\n");
     status = ERROR;
@@ -187,4 +187,4 @@ void * task_socket(void* param)
 //
 //   /* Send out response to the requesting client */
 
-}
+//}

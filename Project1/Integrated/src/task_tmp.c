@@ -174,7 +174,7 @@ void * task_tmp(void * param)
 					DEBUG("[DEBUG] TMP task responded to GET_TEMP_K request.\n");
 					break;
         case GET_TEMP_F:
-					DEBUG("[DEBUG] TMP task received GET_TEMP_F request.\n"
+					DEBUG("[DEBUG] TMP task received GET_TEMP_F request.\n");
 					tmp_msg = create_message_struct(TEMP_THREAD, SOCKETTHREAD, INFO, GET_TEMP_F);
           sprintf(tmp_msg.msg,"Temperature Value: %0.3f degree F.",temperature*1.8 + 32);
 					info.data = tmp_msg;

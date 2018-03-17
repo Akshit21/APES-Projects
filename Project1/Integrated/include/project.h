@@ -23,12 +23,12 @@
 #include <mqueue.h>
 #include <sys/types.h>
 
+#include "message.h"
 #include "task.h"
 #include "user_i2c.h"
 #include "apds9301.h"
 #include "tmp1021.h"
 #include "helper.h"
-#include "message.h"
 #include "led.h"
 
 #define SENSOR_STARTUP_TEST
@@ -41,7 +41,7 @@
 #define SOCKET_TASK
 #define LOGGER_TASK
 #define LOGGER_TASK_MESSAGING
-//#define MAIN_HEARTBEAT_REQUEST
+#define MAIN_HEARTBEAT_REQUEST
 
 #define DEBUG printf
 #endif
