@@ -83,7 +83,6 @@ msg_send(&info);
     while(main_queue_flag)
     {
 	    main_queue_flag--;
-	    printf("---------------------received heartbeat\n");
       memset(info.data.msg, 0, sizeof(info.data.msg));
       info.thread_mutex_lock = main_queue_mutex;
       info.qName = MAIN_QUEUE;

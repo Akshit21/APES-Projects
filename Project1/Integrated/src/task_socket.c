@@ -39,7 +39,9 @@ void * task_socket(void* param)
 
   while(status == SUCCESS)
   {
+	  DEBUG("[DEBUG] SOCKET task running.\n");
     /* Check if any client request */
+
     if(newsocketfd = accept(socketfd, NULL, NULL))
     {
       if(read(newsocketfd, &socket_msg, sizeof(socket_msg)) == sizeof(socket_msg))
@@ -112,7 +114,8 @@ void * task_socket(void* param)
             info.thread_mutex_lock = main_queue_mutex;
             info.qName = MAIN_QUEUE;
             status = msg_send(&info);
-            break;
+            DEBUG("[DEBUG] SOCKET task responeded to HEARTBEAT request.\n");
+	    break;
           case GET_TEMP_C:
           case GET_TEMP_F:
           case GET_TEMP_K:

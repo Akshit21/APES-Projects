@@ -24,7 +24,7 @@ void apds_irq_handler(int signo)
 #ifdef LIGHT_TASK
 void * task_light(void * param)
 {
-  int32_t apds_handle;
+  int32_t apds_handle = *(int32_t*)param;
   int32_t apds_irq_handle;
   struct sigaction apds_irq_action;
   int16_t ch0_data, ch1_data;
@@ -35,13 +35,6 @@ void * task_light(void * param)
   Message_t apds_msg;
   ThreadInfo_t info;
 
-  /* Set up the light sensor */
-  if(apds9301_init(&apds_handle)!=0)
-  {
-    // Error log
-    status = ERROR;
-  }
-
 #ifdef LIGHT_TASK_ALERT
   /* Set up the pin interrupt for handling light alert */
   memset(&apds_irq_action, 0, sizeof(apds_irq_action));
@@ -50,6 +43,7 @@ void * task_light(void * param)
   if(sigaction(SIGIO, &apds_irq_action, NULL)!=0)
   {
     // Error log
+    DEBUG("[DEBUG] sigaction failed.\n");
     status = ERROR;
   }
   if((apds_irq_handle=open("/dev/gpio_int", O_RDWR))<0)
@@ -110,7 +104,7 @@ void * task_light(void * param)
        }
        else
        {
-	        DEBUG("update\n");
+	        DEBUG("[DEBUG] LIGHT task updated light state to: %s\n", light_state_s[light_state]);
           op_flag = 0;
 #ifdef LIGHT_TASK_MESSAGING
           apds_msg = create_message_struct(LIGHT_THREAD, LOGGERTHREAD, INFO, LOG_MSG);

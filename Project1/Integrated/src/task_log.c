@@ -79,7 +79,7 @@ Status_t log_data(FILE **pfile, Message_t *message, const char *fileName)
 		return ERROR;
 	}
 
-	char logData[100] = {(uint8_t)'\0'};
+	char logData[200] = {(uint8_t)'\0'};
 	sprintf(logData, "%s[%s]%s  Task: %s\tMessage: %s\tTime: %s\n\n",
 		colors[message->type + 1], levels[message->type], colors[0],
     task[message->sourceId], message->msg, ctime(&message->timeStamp));
