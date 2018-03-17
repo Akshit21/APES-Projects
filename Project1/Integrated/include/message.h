@@ -18,7 +18,7 @@
 #ifndef API_H_
 #define API_H_
 
-#define MAX_PAYLOAD_SIZE (20)
+#define MAX_PAYLOAD_SIZE (50)
 
 #define LOGGER_QUEUE	"/qlogger"
 #define TEMP_QUEUE		"/qtemp"
@@ -130,7 +130,6 @@ void update_queue_flag(Dest_t dest);
 Status_t msg_send(ThreadInfo_t *info);
 Status_t msg_receive(ThreadInfo_t *info);
 Status_t msg_log(ThreadInfo_t *info);
-
-//Status_t request_heartbeat();
+Status_t request_heartbeat(void);
 
 #endif /* API_H_ */

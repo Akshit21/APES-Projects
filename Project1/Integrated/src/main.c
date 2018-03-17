@@ -6,9 +6,16 @@ int main(int argc, char const *argv[])
   pthread_t thread1, thread2, thread3, thread4;
   int32_t tmp_handle, apds_handle;
 
+
   /* Connect the sensor */
-  tmp1021_init(&tmp_handle);
+#ifdef TEMP_TASK
+  if(tmp1021_init(&tmp_handle)==-1)
+  	printf("tmp init failed\n");
+#endif
+
+#ifdef LIGHT_TASK
   apds9301_init(&apds_handle);
+#endif
 
 #ifdef SENSOR_STARTUP_TEST
   /* Sensor startup test */
@@ -38,12 +45,13 @@ int main(int argc, char const *argv[])
     exit(EXIT_FAILURE);
   }
 #endif
-
+#ifdef LOGGER_TASK
   if(pthread_create(&thread4, NULL, task_log, NULL))
   {
     perror("Failed to create the socket task.");
     exit(EXIT_FAILURE);
   }
+#endif
 #ifdef MAIN_HEARTBEAT_REQUEST
   /* Heartbeat processing */
   //request_heartbeat();
@@ -92,6 +100,8 @@ int main(int argc, char const *argv[])
 #ifdef SOCKET_TASK
   pthread_join(thread3, NULL);
 #endif
+#ifdef LOGGER_TASK
   pthread_join(thread4, NULL);
+#endif
   exit(EXIT_SUCCESS);
 }
