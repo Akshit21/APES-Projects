@@ -150,6 +150,7 @@ void * task_light(void * param)
 					  apds_msg = create_message_struct(LIGHT_THREAD, SOCKETTHREAD, INFO,
                                              GET_LIGHT);
             // populate lux value
+            sprintf(apds_msg.msg,"Light Value: %0.3f.",8.5);
 					  info.data = apds_msg;
 					  info.thread_mutex_lock = socket_queue_mutex;
 					  info.qName = SOCKET_QUEUE;
@@ -158,8 +159,9 @@ void * task_light(void * param)
 				  case GET_LIGHT_STATE:
 					// Get the light state for external request
 					  apds_msg = create_message_struct(LIGHT_THREAD, SOCKETTHREAD, INFO,
-						                                 GET_LIGHT);
+						                                 GET_LIGHT_STATE);
             // Populate light state
+            sprintf(apds_msg.msg,"Light STATE: %s.","DAY");
             info.data = apds_msg;
 					  info.thread_mutex_lock = socket_queue_mutex;
 					  info.qName = SOCKET_QUEUE;
