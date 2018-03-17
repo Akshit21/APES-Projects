@@ -31,7 +31,7 @@ void tmp_irq_handler(int signo)
 {
   if(signo == SIGIO)
   {
-    
+
   }
 }
 #endif
@@ -163,9 +163,29 @@ void * task_tmp(void * param)
 					break; //EXIT CODE
 				case GET_TEMP_C:
 					// Get the temperature value for external request
-					tmp_msg = create_message_struct(TEMP_THREAD, tmp_msg.sourceId, INFO,
+					tmp_msg = create_message_struct(TEMP_THREAD, SOCKETTHREAD, INFO,
 							                            GET_TEMP_C);
           sprintf(tmp_msg.msg,"Temperature Value: %0.3f degree C.",temperature);
+					info.data = tmp_msg;
+					info.thread_mutex_lock = socket_queue_mutex;
+					info.qName = SOCKET_QUEUE;
+					msg_send(&info);
+					break;
+        case GET_TEMP_K:
+					// Get the temperature value for external request
+					tmp_msg = create_message_struct(TEMP_THREAD, SOCKETTHREAD, INFO,
+							                            GET_TEMP_K);
+          sprintf(tmp_msg.msg,"Temperature Value: %0.3f degree K.",temperature);
+					info.data = tmp_msg;
+					info.thread_mutex_lock = socket_queue_mutex;
+					info.qName = SOCKET_QUEUE;
+					msg_send(&info);
+					break;
+        case GET_TEMP_F:
+					// Get the temperature value for external request
+					tmp_msg = create_message_struct(TEMP_THREAD, SOCKETTHREAD, INFO,
+							                            GET_TEMP_F);
+          sprintf(tmp_msg.msg,"Temperature Value: %0.3f degree F.",temperature);
 					info.data = tmp_msg;
 					info.thread_mutex_lock = socket_queue_mutex;
 					info.qName = SOCKET_QUEUE;
