@@ -41,6 +41,13 @@ void test_apds9301(void** state)
   i2c_disconnect_mutex(apds_handle);
 }
 
+void test_ipc(void** state)
+{
+  /*Send Heart Beat Messages to all the thread*/
+  Status_t status = request_heartbeat();
+  assert_true(status == SUCCESS);
+}
+
 int main(int argc, char ** argv)
 {
   const struct CMUnitTest tests[] =
