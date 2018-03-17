@@ -63,6 +63,7 @@ void update_queue_flag(Dest_t dest)
 			temp_queue_flag++;
 			break;
 		case LIGHTTHREAD:
+			printf("light queue flag +++++++++++++++++++++++++++++++++\n");
 			light_queue_flag++;
 			break;
 		case SOCKETTHREAD:
