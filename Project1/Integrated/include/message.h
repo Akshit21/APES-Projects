@@ -131,5 +131,6 @@ Status_t msg_send(ThreadInfo_t *info);
 Status_t msg_receive(ThreadInfo_t *info);
 Status_t msg_log(ThreadInfo_t *info);
 Status_t request_heartbeat(void);
+Status_t log_data(FILE **pfile, Message_t *message, const char *fileName);
 
 #endif /* API_H_ */

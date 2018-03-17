@@ -1,6 +1,6 @@
 #include "project.h"
 
-static Status_t log_data(FILE **pfile, Message_t *message, const char *fileName);
+Status_t log_data(FILE **pfile, Message_t *message, const char *fileName);
 
 void *task_log(void *param)
 {
@@ -66,7 +66,7 @@ void *task_log(void *param)
   pthread_exit(NULL);
 }
 
-static Status_t log_data(FILE **pfile, Message_t *message, const char *fileName)
+Status_t log_data(FILE **pfile, Message_t *message, const char *fileName)
 {
 	if(*pfile == NULL)	return ERROR;
 	if(message == NULL)	return ERROR;
