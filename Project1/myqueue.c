@@ -4,7 +4,7 @@
 * Redistribution, modification or use of this software in source or binary
 * forms is permitted as long as the files maintain this copyright. Users are
 * permitted to modify this and use it to learn about the field of embedded
-* software. Akshit Shah, Shuting Guo, Prof. Alex Fosdick and the University of Colorado are 
+* software. Akshit Shah, Shuting Guo, Prof. Alex Fosdick and the University of Colorado are
 * not liable for any misuse of this material.
 ***************************************************************************************************/
 /***************************************************************************************************
@@ -16,7 +16,7 @@
 *
 * @tool : Compiler - GCC, Linker - GDB, Cross Compiler - arm-linux-gnueabihf-gcc
 * @hardware : Beagle Bone Green AM335x Arm Corex - A8, TMP106, APDS-9301
-* @reference : https://stackoverflow.com/questions/3056307/how-do-i-use-mqueue-in-a-c-program-on-a-linux-based-system 
+* @reference : https://stackoverflow.com/questions/3056307/how-do-i-use-mqueue-in-a-c-program-on-a-linux-based-system
 ***************************************************************************************************/
 
 #include "main.h"
@@ -30,7 +30,7 @@ void init_queue()
 	mq_unlink (LOGGER_QUEUE);
 	mq_unlink (TEMP_QUEUE);
 	mq_unlink (LIGHT_QUEUE);
-	
+
 	struct mq_attr attr;
 	attr.mq_maxmsg = 20;
 	attr.mq_msgsize = sizeof(Message_t);
@@ -63,25 +63,24 @@ void *logThread(void *threadArgs)
     ThreadInfo_t info = {0};
 	info.data = pMsg;
 	char msg1[20] = {(uint8_t)'\0'};;
-	
+
 	FILE *pfile;
 	char *fileName = "logFile.txt";
 	get_log_file(&pfile, fileName);
-	
-	while (1) 
+
+	while (1)
 	{
-		while (log_flag)
+		while (log_flag--)
 		{
-			log_flag--;
-			
+
 			info.thread_mutex_lock = log_queue_mutex;
 			info.qName = LOGGER_QUEUE;
 			msg_receive(&info);
-			
+
 			pMsg = info.data;
 			switch(pMsg.requestId)
 			{
-				case LOG_MSG: 
+				case LOG_MSG:
 					printf ("Source ID: %d \n", pMsg.sourceId);
 					printf ("Timestamp: %s", ctime(&pMsg.timeStamp));
 					printf ("Log Level: %s \n", levels[pMsg.type]);
@@ -97,6 +96,7 @@ void *logThread(void *threadArgs)
 					info.thread_mutex_lock = main_queue_mutex;
 					info.qName = MAIN_QUEUE;
 					msg_send(&info);
+					printf("Logger sent to the msg Main\n");
 					break;
 				case SHUT_DOWN:
 					break; //EXIT CODE
@@ -111,10 +111,10 @@ void *logThread(void *threadArgs)
 void *tempThread(void *threadArgs)
 {
 	printf("In Temp Thread\n");
-	
+
 	ThreadInfo_t info;
 	Message_t temp_msg;
-	
+
 	float temp_val = 20.5; // will be removed when integrated
 	char msg[20] = {(uint8_t)'\0'};
 	char msg1[20] = {(uint8_t)'\0'};
@@ -123,24 +123,24 @@ void *tempThread(void *threadArgs)
 	create_message_struct(&temp_msg, TEMP_THREAD,
 						  LOGGERTHREAD, INFO,
 						  LOG_MSG, msg);
-	
+
 	while(1)
 	{
 		info.data = temp_msg;
 		info.thread_mutex_lock = log_queue_mutex;
 		info.qName = LOGGER_QUEUE;
 		msg_send(&info);
-		
+
 		//sleep(1);
-		while (temp_flag)
+		while (temp_flag--)
 		{
-			temp_flag--;
-			
+			printf("Temp Flag:\n");
+
 			//info.data = {0};
 			info.thread_mutex_lock = temp_queue_mutex;
 			info.qName = TEMP_QUEUE;
 			msg_receive(&info);
-			
+
 			temp_msg = info.data;
 			switch(temp_msg.requestId)
 			{
@@ -176,10 +176,10 @@ void *tempThread(void *threadArgs)
 void *lightThread(void *threadArgs)
 {
 	printf("In Light Thread\n");
-		
+
 	ThreadInfo_t info;
 	Message_t light_msg;
-	
+
 	float light_val = 20.5; // will be removed when integrated
 	char msg[20] = {(uint8_t)'\0'};
 	char msg1[20] = {(uint8_t)'\0'};
@@ -188,24 +188,23 @@ void *lightThread(void *threadArgs)
 	create_message_struct(&light_msg, LIGHT_THREAD,
 						  LOGGERTHREAD, INFO,
 						  LOG_MSG, msg);
-	
+
 	while(1)
 	{
 		info.data = light_msg;
 		info.thread_mutex_lock = log_queue_mutex;
 		info.qName = LOGGER_QUEUE;
 		msg_send(&info);
-		
+
 		//sleep(1);
-		while (light_flag)
+		while (light_flag--)
 		{
-			light_flag--;
-			
+			printf("Light Flag:\n");
 			//info.data = {0};
 			info.thread_mutex_lock = light_queue_mutex;
 			info.qName = LIGHT_QUEUE;
 			msg_receive(&info);
-			
+
 			light_msg = info.data;
 			switch(light_msg.requestId)
 			{
@@ -250,13 +249,13 @@ void *lightThread(void *threadArgs)
 
 void *socketThread(void *threadArgs)
 {
-	
+
 }
 
 int main()
 {
     int32_t isThreadCreated = 0;
-    
+
     /* Main Task Handling Code will come here */
     init_queue();
 
@@ -272,7 +271,7 @@ int main()
     {
 	printf("Thread Creation failed, error code - %d\n", isThreadCreated);
     }
-    
+
     /* Create Temperature Thread */
     isThreadCreated = pthread_create(&threads[TEMP_THREAD],NULL,&tempThread,NULL);
     if(isThreadCreated != 0)
@@ -293,48 +292,52 @@ int main()
     {
 	printf("Thread Creation failed, error code - %d\n", isThreadCreated);
     }
-    
+
     /* HEART BEAT */
     //request_heartbeat();
     Message_t main_msg = {0};
     ThreadInfo_t info = {0};
-	info.data = main_msg;
-	while(1){
-    while(main_flag)
-    {
-    	main_flag--;
-    	info.thread_mutex_lock = main_queue_mutex;
-		info.qName = MAIN_QUEUE;
-		msg_receive(&info);
-		
-		main_msg = info.data;
-		if (main_msg.requestId = HEART_BEAT)
+		info.data = main_msg;
+		while(1)
 		{
-			FILE *pfile;
-			char *fileName = "logFile.txt";
-			printf ("Source ID: %d \n", main_msg.sourceId);
-			printf ("Timestamp: %s", ctime(&main_msg.timeStamp));
-			printf ("Log Level: %s \n", levels[main_msg.type]);
-			printf ("Message Data: %s \n", main_msg.msg);
-			log_data(&pfile, &main_msg, fileName);
-			/*switch(main_msg.sourceId)
-			{
-				case LOGGER_THREAD:
-					break;
-				case TEMP_THREAD:
-					break;
-				case LIGHT_THREAD:
-					break;
-				case SOCKET_THREAD:
-					break;
-				default:
-					break;
-			}*/
-			printf("It is here\n");
-		}
+			request_heartbeat();
+    	while(main_flag--)
+    	{
+				printf("Main Flag:\n");
+				memset(info.data.msg, 0, sizeof(info.data.msg));
+    		info.thread_mutex_lock = main_queue_mutex;
+				info.qName = MAIN_QUEUE;
+				msg_receive(&info);
+
+				main_msg = info.data;
+				printf("Request PID:%d\n",main_msg.requestId);
+				if (main_msg.requestId == HEART_BEAT)
+				{
+					FILE *pfile;
+					char *fileName = "logFile.txt";
+					printf ("Source ID: %d \n", main_msg.sourceId);
+					printf ("Timestamp: %s", ctime(&main_msg.timeStamp));
+					printf ("Log Level: %s \n", levels[main_msg.type]);
+					printf ("Message Data: %s \n", main_msg.msg);
+					//log_data(&pfile, &main_msg, fileName);
+					switch(main_msg.sourceId)
+					{
+						case 1:
+							break;
+						case 2:
+							break;
+						case 3:
+							break;
+						case 4:
+							break;
+						default:;
+					}
+					printf("It is here\n");
+				}
+    	}
+			sleep(5);
     }
-    }
-    /* join the pthread with the existing processes */ 
+    /* join the pthread with the existing processes */
     pthread_join(threads[TEMP_THREAD], NULL);
     pthread_join(threads[LIGHT_THREAD], NULL);
     pthread_join(threads[SOCKET_THREAD], NULL);
@@ -342,6 +345,3 @@ int main()
 
     return 0;
 }
-
-
-
