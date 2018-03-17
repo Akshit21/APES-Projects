@@ -150,6 +150,7 @@ void * task_tmp(void * param)
 			switch(tmp_msg.requestId)
 			{
 				case HEART_BEAT:
+					printf("temp:hb request ********\n");
 					tmp_msg = create_message_struct(TEMP_THREAD, MAINTHREAD, HEARTBEAT,
 							HEART_BEAT);
 					info.data = tmp_msg;
@@ -161,13 +162,16 @@ void * task_tmp(void * param)
           status = ERROR;
 					break; //EXIT CODE
 				case GET_TEMP_C:
+					printf("temper response....%d\n", GET_TEMP_C);
 					// Get the temperature value for external request
 					tmp_msg = create_message_struct(TEMP_THREAD, SOCKETTHREAD, INFO,
 							                            GET_TEMP_C);
-          sprintf(tmp_msg.msg,"Temperature Value: %0.3f degree C.",temperature);
+          				printf("tempererqwq  %d\n", tmp_msg.requestId);
+					sprintf(tmp_msg.msg,"Temperature Value: %0.3f degree C.",temperature);
 					info.data = tmp_msg;
 					info.thread_mutex_lock = socket_queue_mutex;
 					info.qName = SOCKET_QUEUE;
+					printf("aha.....%d\n",info.data.requestId);
 					msg_send(&info);
 					break;
         case GET_TEMP_K:

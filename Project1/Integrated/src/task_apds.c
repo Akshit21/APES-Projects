@@ -14,7 +14,7 @@ void apds_irq_handler(int signo)
 {
   if(signo == SIGIO)
   {
-    printf("light alert\n");
+    printf("light alert!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1\n");
     /* Clear the apds interrupt assertion */
   	sem_post(&apds_sem);
   }
@@ -87,6 +87,7 @@ void * task_light(void * param)
     /* Wait for light state change event */
     if(sem_timedwait(&apds_sem, &sem_timeout)!=-1)
     {
+	i2c_write_byte_mutex(apds_handle, CMD|CLEAR|CONTROL_REG, 0x03);
       /* Update light state */
       while((retry<=RETRY_MAX)&&(op_flag==0))
       {
@@ -130,17 +131,20 @@ void * task_light(void * param)
     /* Process message queue */;
 		while (light_queue_flag)
 		{
+			printf("light:::::::::::::::::receiving....\n");
 			light_queue_flag--;
 
 		  memset(&info.data.msg, 0, sizeof(info.data.msg));
 			info.thread_mutex_lock = light_queue_mutex;
 			info.qName = LIGHT_QUEUE;
-      if((status = msg_receive(&info))!=SUCCESS)
+      if((status = msg_receive(&info))==SUCCESS)
       {
+	      printf("@#$%^&*()_------------------------------------------------\n");
 			  apds_msg = info.data;
 			  switch(apds_msg.requestId)
 			  {
 				  case HEART_BEAT:
+					  printf("light:hb requested....%d****\n", LIGHT_THREAD);
 					  apds_msg = create_message_struct(LIGHT_THREAD, MAINTHREAD, HEARTBEAT,
 							                             HEART_BEAT);
 					  info.data = apds_msg;
@@ -179,7 +183,7 @@ void * task_light(void * param)
 		}
 #endif
   }
-
+	printf("light exit!!!!!!!!!!!!!!!!!!!!\n");
   /* THread clean up routine */
 	close(apds_irq_handle);
   sem_destroy(&apds_sem);
@@ -214,10 +218,11 @@ int32_t apds9301_init(int32_t *dev_fp)
     ret = -1;
   /* Set up interrupt */
   if(i2c_write_byte_mutex(*dev_fp, CMD | INTERRUPT_REG,
-                          (uint8_t)DEFAULT_INTERRUPT_SETTING))
+                          (uint8_t)DEFAULT_INTERRUPT_SETTING)==-1)
     ret = -1;
 #endif
-
+  if(i2c_write_byte_mutex(*dev_fp, CMD|CLEAR|CONTROL_REG, 0x03)==-1)
+	  ret =-1;
   return ret;
 }
 
@@ -230,19 +235,19 @@ static int32_t apds_update_state(int32_t dev_fp, uint32_t state)
     case LIGHT_STATE_DAY:
       light_state = LIGHT_STATE_NIGHT;
       if(i2c_write_word_mutex(dev_fp, CMD | WORD | THRESHLOW_REG,
-                          (uint16_t)DEFAULT_THRESH_VALUE)!=0)
+                          (uint16_t)THRESH_MIN)!=0)
         ret = -1;
       if(i2c_write_word_mutex(dev_fp, CMD | WORD | THRESHHIGH_REG,
-                          (uint16_t)THRESH_MAX)!=0)
+                          (uint16_t)DEFAULT_THRESH_VALUE)!=0)
         ret = -1;
       break;
     case LIGHT_STATE_NIGHT:
       light_state = LIGHT_STATE_DAY;
       if(i2c_write_word_mutex(dev_fp, CMD | WORD | THRESHLOW_REG,
-                          (uint16_t)THRESH_MIN)!=0)
+                          (uint16_t)DEFAULT_THRESH_VALUE)!=0)
         ret = -1;
       if(i2c_write_word_mutex(dev_fp, CMD | WORD | THRESHHIGH_REG,
-                          (uint16_t)DEFAULT_THRESH_VALUE)!=0)
+                          (uint16_t)THRESH_MAX)!=0)
         ret = -1;
       break;
     default:;
