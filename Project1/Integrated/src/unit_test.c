@@ -38,6 +38,22 @@ void test_apds9301(void** state)
   assert_int_equal(i2c_read_byte_mutex(apds_handle, CMD|CONTROL_REG,
                                       &read_byte), 0);
   assert_true(read_byte == 0x00);
+  /* Disconnect */
+  i2c_disconnect_mutex(apds_handle);
+}
+
+void test_tmp1021(void** state)
+{
+  int8_t read_byte;
+  int16_t read_word;
+  int32_t tmp_handle;
+  /* Test connecting to device */
+  assert_int_equal(i2c_connect_mutex(&tmp_handle, TMP1021_ADDR), 0);
+  /* Test configuring sensor register */
+  tmp1021_shutdown_enable(tmp_handle);
+  i2c_read_byte_mutex(tmp_handle, CONFIG_REG, &read_byte)
+  assert_true(read_byte & CONFIG_SD_MASK == CONFIG_SD_ENABLED);
+  /* Disconnect */
   i2c_disconnect_mutex(apds_handle);
 }
 
@@ -139,6 +155,7 @@ int main(int argc, char ** argv)
   const struct CMUnitTest tests[] =
   {
     cmocka_unit_test(test_apds9301),
+    cmocka_unit_test(test_tmp1021),
     cmocka_unit_test(test_initialise_queue_success),
     cmocka_unit_test(test_queue_send_receive_fail),
     cmocka_unit_test(test_queue_send_receive_success),
