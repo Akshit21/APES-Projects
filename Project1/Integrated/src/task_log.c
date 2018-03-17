@@ -19,12 +19,13 @@ void *task_log(void *param)
 	while (status == SUCCESS)
 	{
 #ifdef LOGGER_TASK_MESSAGING
-		while (log_queue_flag--)
+		while (log_queue_flag)
 		{
+			log_queue_flag--;
       memset(info.data.msg, 0, sizeof(info.data.msg));
 			info.thread_mutex_lock = log_queue_mutex;
 			info.qName = LOGGER_QUEUE;
-			if((status = msg_receive(&info))==SUCCESS);
+			if((status = msg_receive(&info))==SUCCESS)
 			{
         log_msg = info.data;
 			  switch(log_msg.requestId)
@@ -37,6 +38,7 @@ void *task_log(void *param)
 					  status = log_data(&pfile, &log_msg, fileName);
 					  break;
 				  case HEART_BEAT:
+					  printf("*******log heartbeat request\n");
 					  log_msg = create_message_struct(LOGGER_THREAD, MAINTHREAD, HEARTBEAT,
 							                            HEART_BEAT);
 					  info.data = log_msg;

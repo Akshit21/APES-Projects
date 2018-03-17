@@ -65,6 +65,7 @@ cmocka :
 
 .PHONY : all
 all : $(LIB) $(EXE)
+	gcc -g socket_client.c api.c -I$(LIB_INCLUDE_DIR) -o client.out $(MAIN_LFLAGS)
 
 .PHONY : test
 test : $(UNITTEST_EXE)
@@ -72,7 +73,7 @@ test : $(UNITTEST_EXE)
 
 .PHONY : clean
 clean : FORCE
-	-rm -rf *~ *.o  $(LIB) $(EXE) $(UNITTEST_EXE) *.dSYM/
+	-rm -rf *~ *.o  $(LIB) $(EXE) $(UNITTEST_EXE) *.dSYM/ *.txt *.out
 
 .PHONY : cmocka_uninstall
 cmocka_uninstall :

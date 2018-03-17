@@ -1,4 +1,4 @@
-#include <stdio.h>
+/*#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
@@ -7,10 +7,13 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <arpa/inet.h>
-
-#include "message.h"
+*/
+#include "project.h"
 
 #define PORT_NO (9999)
+
+void printMenu(void);
+void process_msg(Message_t *pResp);
 
 int main(int argc, char const *argv[])
 {
@@ -33,15 +36,19 @@ int main(int argc, char const *argv[])
   serv_addr.sin_port = htons(portno);
   if(connect(socketfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))==0)
   {
-    msg_t msg_out, msg_in;
-    msg_out.msg_id = MSG_ID_LED;
-    msg_out.msg_payload.led_ctl = (int)(*argv[1]-48);
-    msg_out.payload_len = 1;
-    printf("Client: Sending LED control command.\n");
-    write(socketfd, &msg_out, sizeof(msg_out));
-    sleep(2);
-    read(socketfd, &msg_in, sizeof(msg_in));
-    process_msg(msg_in);
+    Message_t socket_msg_req = {0};
+    Message_t socket_msg_resp = {0};
+
+    socket_msg_req = create_message_struct(SOCKET_CLIENT, SOCKET_THREAD, INFO, REQUEST_MAX);
+    while(1)
+    {
+      printMenu();
+      scanf("%d",&socket_msg_req.requestId);
+      write(socketfd, &socket_msg_req, sizeof(socket_msg_req));
+      sleep(2);
+      read(socketfd, &socket_msg_resp, sizeof(socket_msg_resp));
+      process_msg(&socket_msg_resp);
+    }
     shutdown(socketfd, SHUT_RDWR);
   }
   else
@@ -50,4 +57,25 @@ int main(int argc, char const *argv[])
     exit(EXIT_FAILURE);
   }
   exit(EXIT_SUCCESS);
+}
+
+void printMenu(void)
+{
+  printf("\n")
+  printf("**********************************************************\n");
+  printf("Welcome to Weather Station\n");
+  printf("**********************************************************\n");
+  printf("Choose an Option\n");
+  printf("\n(1). Get Temperature (in Celcius)");
+  printf("\n(2). Get Temperature (in Farenheit)");
+  printf("\n(3). Get Temperature (in Kelvin)");
+  printf("\n(4). Get Light Luminosity");
+  printf("\n(5). Get Light State");
+  printf("\n**********************************************************\n");
+  printf("Enter the Option:");
+}
+
+void process_msg(Message_t *pResp)
+{
+  printf("\n[Response]:%s\n[Time]:%s\n",pResp->msg,pResp->timeStamp);
 }

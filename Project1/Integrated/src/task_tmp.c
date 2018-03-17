@@ -20,6 +20,7 @@ static float tmp_raw_to_temperature(int16_t raw, int32_t format);
 #ifdef TEMP_TASK
 void tmp_timer_handler(union sigval arg)
 {
+	printf("tmp_timer_up\n");
   pthread_mutex_lock(&tmp_mutex);
 	pthread_cond_signal(&tmp_cond);
   pthread_mutex_unlock(&tmp_mutex);
@@ -30,7 +31,7 @@ void tmp_irq_handler(int signo)
 {
   if(signo == SIGIO)
   {
-    
+
   }
 }
 #endif
@@ -53,7 +54,7 @@ void * task_tmp(void * param)
   Status_t status = SUCCESS;
   Message_t tmp_msg;
   ThreadInfo_t info;
-
+	printf("tmp_thread.\n");
 #ifdef TEMP_TASK_ALERT
   /* Set up the pin interrupt for handling light alert */
   memset(&tmp_irq_action, 0, sizeof(tmp_irq_action));
@@ -85,6 +86,7 @@ void * task_tmp(void * param)
   if((timer_setup(&timer_id, TMP_PERIOD, tmp_timer_handler))==-1)
   {
   	// error;
+	printf("ohtimer.\n");
 	  status = ERROR;
   }
 
@@ -98,6 +100,7 @@ void * task_tmp(void * param)
 	  pthread_cond_wait(&tmp_cond, &tmp_mutex);
     pthread_mutex_unlock(&tmp_mutex);
     /* Read temperature raw data from the sensor */
+    printf("tmp_get cond\n");
     while((retry<=RETRY_MAX) && (op_flag==0))
     {
       if(i2c_read_word_mutex(tmp_handle, TEMP_REG, &tmp)==-1)
@@ -118,16 +121,19 @@ void * task_tmp(void * param)
     }
     else
     {
+	printf("convert\n");
       /* Convert digital data format to temperature */
       temperature = tmp_raw_to_temperature(tmp, CELSIUS_FORMAT);
 
       /* Enqueue the temperature onto the msg queue */
+#ifdef TEMP_TASK_MESSAGING
       tmp_msg = create_message_struct(TEMP_THREAD, LOGGERTHREAD, INFO, LOG_MSG);
       sprintf(tmp_msg.msg,"Temperature Value: %0.3f degree C.",temperature);
       info.data = tmp_msg;
       info.thread_mutex_lock = log_queue_mutex;
       info.qName = LOGGER_QUEUE;
       status = msg_log(&info);
+#endif
       printf("Temperature: %.2f\n", temperature);
     }
 
@@ -144,6 +150,7 @@ void * task_tmp(void * param)
 			switch(tmp_msg.requestId)
 			{
 				case HEART_BEAT:
+					printf("temp:hb request ********\n");
 					tmp_msg = create_message_struct(TEMP_THREAD, MAINTHREAD, HEARTBEAT,
 							HEART_BEAT);
 					info.data = tmp_msg;
@@ -154,11 +161,34 @@ void * task_tmp(void * param)
 				case SHUT_DOWN:
           status = ERROR;
 					break; //EXIT CODE
-				case GET_TEMP:
+				case GET_TEMP_C:
+					printf("temper response....%d\n", GET_TEMP_C);
 					// Get the temperature value for external request
-					tmp_msg = create_message_struct(TEMP_THREAD, tmp_msg.sourceId, INFO,
-							                            GET_TEMP);
-          sprintf(tmp_msg.msg,"Temperature Value: %0.3f degree C.",temperature);
+					tmp_msg = create_message_struct(TEMP_THREAD, SOCKETTHREAD, INFO,
+							                            GET_TEMP_C);
+          				printf("tempererqwq  %d\n", tmp_msg.requestId);
+					sprintf(tmp_msg.msg,"Temperature Value: %0.3f degree C.",temperature);
+					info.data = tmp_msg;
+					info.thread_mutex_lock = socket_queue_mutex;
+					info.qName = SOCKET_QUEUE;
+					printf("aha.....%d\n",info.data.requestId);
+					msg_send(&info);
+					break;
+        case GET_TEMP_K:
+					// Get the temperature value for external request
+					tmp_msg = create_message_struct(TEMP_THREAD, SOCKETTHREAD, INFO,
+							                            GET_TEMP_K);
+          sprintf(tmp_msg.msg,"Temperature Value: %0.3f degree K.",temperature);
+					info.data = tmp_msg;
+					info.thread_mutex_lock = socket_queue_mutex;
+					info.qName = SOCKET_QUEUE;
+					msg_send(&info);
+					break;
+        case GET_TEMP_F:
+					// Get the temperature value for external request
+					tmp_msg = create_message_struct(TEMP_THREAD, SOCKETTHREAD, INFO,
+							                            GET_TEMP_F);
+          sprintf(tmp_msg.msg,"Temperature Value: %0.3f degree F.",temperature);
 					info.data = tmp_msg;
 					info.thread_mutex_lock = socket_queue_mutex;
 					info.qName = SOCKET_QUEUE;

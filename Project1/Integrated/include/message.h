@@ -18,7 +18,7 @@
 #ifndef API_H_
 #define API_H_
 
-#define MAX_PAYLOAD_SIZE (20)
+#define MAX_PAYLOAD_SIZE (50)
 
 #define LOGGER_QUEUE	"/qlogger"
 #define TEMP_QUEUE		"/qtemp"
@@ -38,13 +38,15 @@ typedef enum _Status_t
 
 typedef enum _RequesId_t
 {
-    HEART_BEAT,
-    STARTUP_TEST,
     LOG_MSG,
-    GET_TEMP,
+    GET_TEMP_C,
+		GET_TEMP_K,
+		GET_TEMP_F,
     GET_LIGHT,
     GET_LIGHT_STATE,
     SHUT_DOWN,
+		HEART_BEAT,
+    STARTUP_TEST,
 
     /*Add new states above this line*/
     REQUEST_MAX
@@ -57,6 +59,7 @@ typedef enum _Source_t
     TEMP_THREAD,
     LIGHT_THREAD,
     SOCKET_THREAD,
+		SOCKET_CLIENT,
 
     /*Add new states above this line*/
     SOURCE_MAX
@@ -69,6 +72,7 @@ typedef enum _Dest_t
     TEMPTHREAD,
     LIGHTTHREAD,
     SOCKETTHREAD,
+		SOCKETCLIET,
 
     /*Add new states above this line*/
     DEST_MAX
@@ -126,7 +130,6 @@ void update_queue_flag(Dest_t dest);
 Status_t msg_send(ThreadInfo_t *info);
 Status_t msg_receive(ThreadInfo_t *info);
 Status_t msg_log(ThreadInfo_t *info);
-
-//Status_t request_heartbeat();
+Status_t request_heartbeat(void);
 
 #endif /* API_H_ */
