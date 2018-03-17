@@ -76,9 +76,12 @@ void * task_light(void * param)
       //error log
       status = ERROR;
   }
+  printf("setup light irq\n");
 
   while(status == SUCCESS)
   {
+	  sleep(1);
+	  printf("light thread is here\n");
     /* Enqueue state changes to the msg queue */
 
     /* Wait for light state change event */
@@ -107,13 +110,16 @@ void * task_light(void * param)
       }
       else
       {
+	printf("update\n");
         op_flag = 0;
+#ifdef LIGHT_TASK_MESSAGING
         apds_msg = create_message_struct(LIGHT_THREAD, LOGGERTHREAD, INFO, LOG_MSG);
         sprintf(apds_msg.msg,"Light state changed to: %s",light_state_s[light_state]);
         info.data = apds_msg;
         info.thread_mutex_lock = log_queue_mutex;
         info.qName = LOGGER_QUEUE;
         status = msg_log(&info);
+#endif
       }
     }
     /* Enqueue error message onto the queue */
@@ -200,7 +206,7 @@ int32_t apds9301_init(int32_t *dev_fp)
   /* Update the light state */
   if(i2c_read_word_mutex(*dev_fp, CMD | WORD | DATA0_REG, &ch0_data)!=0)
     ret = -1;
-  light_state = ch0_data > DEFAULT_THRESH_VALUE ? LIGHT_STATE_DAY : LIGHT_STATE_NIGHT;
+  light_state = ch0_data < DEFAULT_THRESH_VALUE ? LIGHT_STATE_DAY : LIGHT_STATE_NIGHT;
   /* Update the thresholds */
   if(apds_update_state(*dev_fp, light_state)==-1)
     ret = -1;

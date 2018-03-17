@@ -24,7 +24,7 @@ void *task_log(void *param)
       memset(info.data.msg, 0, sizeof(info.data.msg));
 			info.thread_mutex_lock = log_queue_mutex;
 			info.qName = LOGGER_QUEUE;
-			if((status = msg_receive(&info))==SUCCESS);
+			if((status = msg_receive(&info))==SUCCESS)
 			{
         log_msg = info.data;
 			  switch(log_msg.requestId)

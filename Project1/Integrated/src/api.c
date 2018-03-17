@@ -76,12 +76,12 @@ void update_queue_flag(Dest_t dest)
 Status_t msg_send(ThreadInfo_t *info)
 {
 	struct mq_attr attr;
-	attr.mq_maxmsg = 20;
+	attr.mq_maxmsg = 100;
 	attr.mq_msgsize = sizeof(Message_t);
 	attr.mq_flags = 0;
 
 	pthread_mutex_lock(&info->thread_mutex_lock);
-	mqd_t queue_handle =  mq_open(info->qName, O_RDWR, S_IWUSR | S_IRUSR, &attr);
+	mqd_t queue_handle =  mq_open(info->qName, O_CREAT|O_RDWR, S_IWUSR | S_IRUSR, &attr);
 	if (queue_handle == (mqd_t)-1)
 		perror("Couldn't create the queue");
 
@@ -101,12 +101,12 @@ Status_t msg_send(ThreadInfo_t *info)
 Status_t msg_receive(ThreadInfo_t *info)
 {
 	struct mq_attr attr;
-	attr.mq_maxmsg = 20;
+	attr.mq_maxmsg = 100;
 	attr.mq_msgsize = sizeof(Message_t);
 	attr.mq_flags = 0;
 
 	pthread_mutex_lock(&info->thread_mutex_lock);
-	mqd_t queue_handle =  mq_open(info->qName, O_RDWR, S_IWUSR | S_IRUSR, &attr);
+	mqd_t queue_handle =  mq_open(info->qName, O_CREAT|O_RDWR, S_IWUSR | S_IRUSR, &attr);
 	if (queue_handle == (mqd_t)-1)
 		perror("Couldn't create the queue");
 
