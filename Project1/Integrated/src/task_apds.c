@@ -14,7 +14,7 @@ void apds_irq_handler(int signo)
 {
   if(signo == SIGIO)
   {
-    printf("light alert!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1\n");
+    DEBUG("[DEBUG] Light state change interrupted.\n");
     /* Clear the apds interrupt assertion */
   	sem_post(&apds_sem);
   }
@@ -75,53 +75,52 @@ void * task_light(void * param)
   {
       //error log
       status = ERROR;
-  }
-  printf("setup light irq\n");
+  };
 
   while(status == SUCCESS)
   {
-	  sleep(1);
-	  printf("light thread is here\n");
+    sleep(1);
     /* Enqueue state changes to the msg queue */
 
     /* Wait for light state change event */
     if(sem_timedwait(&apds_sem, &sem_timeout)!=-1)
     {
-	i2c_write_byte_mutex(apds_handle, CMD|CLEAR|CONTROL_REG, 0x03);
-      /* Update light state */
-      while((retry<=RETRY_MAX)&&(op_flag==0))
-      {
-        if(apds_update_state(apds_handle, light_state)==-1)
-        // if((i2c_read_word_mutex(apds_handle, CMD | WORD | DATA0_REG, &ch0_data)!=0) ||
-        //    (i2c_read_word_mutex(apds_handle, CMD | WORD | DATA1_REG, &ch1_data)!=0))
-        {
-          retry++;
-        }
-        else
-        {
-          retry = 0;
-          op_flag = 1;
-        }
-      }
-      /* Failed to read from sensors consecutively */
-      if(op_flag==0)
-      {
+	     i2c_write_byte_mutex(apds_handle, CMD|CLEAR|CONTROL_REG, 0x03);
+       /* Update light state */
+       while((retry<=RETRY_MAX)&&(op_flag==0))
+       {
+         if(apds_update_state(apds_handle, light_state)==ERROR)
+         // if((i2c_read_word_mutex(apds_handle, CMD | WORD | DATA0_REG, &ch0_data)!=0) ||
+         //    (i2c_read_word_mutex(apds_handle, CMD | WORD | DATA1_REG, &ch1_data)!=0))
+         {
+           retry++;
+         }
+         else
+         {
+           retry = 0;
+           op_flag = 1;
+         }
+       }
+       /* Failed to read from sensors consecutively */
+       if(op_flag==0)
+       {
         //error
+        DEBUG("[DEBUG] Failed to change light stats.\n");
         status = ERROR;
-      }
-      else
-      {
-	printf("update\n");
-        op_flag = 0;
+       }
+       else
+       {
+	        DEBUG("update\n");
+          op_flag = 0;
 #ifdef LIGHT_TASK_MESSAGING
-        apds_msg = create_message_struct(LIGHT_THREAD, LOGGERTHREAD, INFO, LOG_MSG);
-        sprintf(apds_msg.msg,"Light state changed to: %s",light_state_s[light_state]);
-        info.data = apds_msg;
-        info.thread_mutex_lock = log_queue_mutex;
-        info.qName = LOGGER_QUEUE;
-        status = msg_log(&info);
+          apds_msg = create_message_struct(LIGHT_THREAD, LOGGERTHREAD, INFO, LOG_MSG);
+          sprintf(apds_msg.msg,"Light state changed to: %s",light_state_s[light_state]);
+          info.data = apds_msg;
+          info.thread_mutex_lock = log_queue_mutex;
+          info.qName = LOGGER_QUEUE;
+          status = msg_log(&info);
 #endif
-      }
+        }
     }
     /* Enqueue error message onto the queue */
 
@@ -129,53 +128,51 @@ void * task_light(void * param)
     //printf("Light:%.2f\n", light);
 #ifdef LIGHT_TASK_MESSAGING
     /* Process message queue */;
-		while (light_queue_flag)
+    while (light_queue_flag)
 		{
-			printf("light:::::::::::::::::receiving....\n");
-			light_queue_flag--;
-
+      light_queue_flag--;
 		  memset(&info.data.msg, 0, sizeof(info.data.msg));
 			info.thread_mutex_lock = light_queue_mutex;
 			info.qName = LIGHT_QUEUE;
       if((status = msg_receive(&info))==SUCCESS)
       {
-	      printf("@#$%^&*()_------------------------------------------------\n");
 			  apds_msg = info.data;
 			  switch(apds_msg.requestId)
 			  {
 				  case HEART_BEAT:
-					  printf("light:hb requested....%d****\n", LIGHT_THREAD);
-					  apds_msg = create_message_struct(LIGHT_THREAD, MAINTHREAD, HEARTBEAT,
-							                             HEART_BEAT);
+					  DEBUG("[DEBUG] LIGHT task received HEARTBEAT request.\n");
+					  apds_msg = create_message_struct(LIGHT_THREAD, MAINTHREAD, HEARTBEAT, HEART_BEAT);
 					  info.data = apds_msg;
 					  info.thread_mutex_lock = main_queue_mutex;
 					  info.qName = MAIN_QUEUE;
 					  status = msg_send(&info);
+            DEBUG("[DEBUG] LIGHT task responded to HEARTBEAT request.\n");
 					  break;
 				  case SHUT_DOWN:
+            DEBUG("[DEBUG] LIGHT task received SHUTDOWN request.\n");
             status = ERROR;
 					  break; //EXIT CODE
 				  case GET_LIGHT:
-					  // Get the light value for external request
-					  apds_msg = create_message_struct(LIGHT_THREAD, SOCKETTHREAD, INFO,
-                                             GET_LIGHT);
+					  DEBUG("[DEBUG] LIGHT task received GET_LIGHT request.\n");
+					  apds_msg = create_message_struct(LIGHT_THREAD, SOCKETTHREAD, INFO, GET_LIGHT);
             // populate lux value
             sprintf(apds_msg.msg,"Light Value: %0.3f.",8.5);
 					  info.data = apds_msg;
 					  info.thread_mutex_lock = socket_queue_mutex;
 					  info.qName = SOCKET_QUEUE;
 					  msg_send(&info);
+            DEBUG("[DEBUG] LIGHT task responded to GET_LIGHT request.\n");
 					  break;
 				  case GET_LIGHT_STATE:
-					// Get the light state for external request
-					  apds_msg = create_message_struct(LIGHT_THREAD, SOCKETTHREAD, INFO,
-						                                 GET_LIGHT_STATE);
+					  DEBUG("[DEBUG] LIGHT task received GET_LIGHT_STATE request.\n");
+					  apds_msg = create_message_struct(LIGHT_THREAD, SOCKETTHREAD, INFO, GET_LIGHT_STATE);
             // Populate light state
             sprintf(apds_msg.msg,"Light STATE: %s.","DAY");
             info.data = apds_msg;
 					  info.thread_mutex_lock = socket_queue_mutex;
 					  info.qName = SOCKET_QUEUE;
 					  msg_send(&info);
+            DEBUG("[DEBUG] LIGHT task responded to GET_LIGHT_STATE request.\n");
 					  break;
 				  default:;
 			  }
@@ -183,7 +180,7 @@ void * task_light(void * param)
 		}
 #endif
   }
-	printf("light exit!!!!!!!!!!!!!!!!!!!!\n");
+	DEBUG("[DEBUG] LIGHT task exits.\n");
   /* THread clean up routine */
 	close(apds_irq_handle);
   sem_destroy(&apds_sem);
@@ -195,64 +192,61 @@ void * task_light(void * param)
 
 #endif
 
-int32_t apds9301_init(int32_t *dev_fp)
+Status_t apds9301_init(int32_t *dev_fp)
 {
-  int32_t ret = 0;
   uint16_t ch0_data;
   /* Connect the apds9301 to the i2c interface */
   if(i2c_connect_mutex(dev_fp, APDS9301_ADDR)!=0)
-    ret = -1;
+    ret = ERROR;
 
   /* Power on the sensor */
   if(i2c_write_byte_mutex(*dev_fp, CMD | CONTROL_REG, POWER_ON)!=0)
-    ret = -1;
+    ret = ERROR;
 
   /* Configure the alert thresholds */
 #ifdef LIGHT_TASK_ALERT
   /* Update the light state */
   if(i2c_read_word_mutex(*dev_fp, CMD | WORD | DATA0_REG, &ch0_data)!=0)
-    ret = -1;
+    ret = ERROR;
   light_state = ch0_data < DEFAULT_THRESH_VALUE ? LIGHT_STATE_DAY : LIGHT_STATE_NIGHT;
   /* Update the thresholds */
-  if(apds_update_state(*dev_fp, light_state)==-1)
-    ret = -1;
+  if(apds_update_state(*dev_fp, light_state)==ERROR)
+    ret = ERROR;
   /* Set up interrupt */
   if(i2c_write_byte_mutex(*dev_fp, CMD | INTERRUPT_REG,
                           (uint8_t)DEFAULT_INTERRUPT_SETTING)==-1)
-    ret = -1;
+    ret = ERROR;
 #endif
   if(i2c_write_byte_mutex(*dev_fp, CMD|CLEAR|CONTROL_REG, 0x03)==-1)
-	  ret =-1;
+	  ret = ERROR;
   return ret;
 }
 
-static int32_t apds_update_state(int32_t dev_fp, uint32_t state)
+static status_t apds_update_state(int32_t dev_fp, uint32_t state)
 {
-  int32_t ret = 0;
-
   switch(state)
   {
     case LIGHT_STATE_DAY:
       light_state = LIGHT_STATE_NIGHT;
       if(i2c_write_word_mutex(dev_fp, CMD | WORD | THRESHLOW_REG,
                           (uint16_t)THRESH_MIN)!=0)
-        ret = -1;
+        ret = ERROR;
       if(i2c_write_word_mutex(dev_fp, CMD | WORD | THRESHHIGH_REG,
                           (uint16_t)DEFAULT_THRESH_VALUE)!=0)
-        ret = -1;
+        ret = ERROR;
       break;
     case LIGHT_STATE_NIGHT:
       light_state = LIGHT_STATE_DAY;
       if(i2c_write_word_mutex(dev_fp, CMD | WORD | THRESHLOW_REG,
                           (uint16_t)DEFAULT_THRESH_VALUE)!=0)
-        ret = -1;
+        ret = ERROR;
       if(i2c_write_word_mutex(dev_fp, CMD | WORD | THRESHHIGH_REG,
                           (uint16_t)THRESH_MAX)!=0)
-        ret = -1;
+        ret = ERROR;
       break;
     default:;
   }
-  return ret;
+  return SUCCESS;
 }
 
 static float apds_raw_to_lux(int16_t ch0, int16_t ch1)

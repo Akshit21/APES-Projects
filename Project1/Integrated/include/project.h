@@ -42,4 +42,6 @@
 #define LOGGER_TASK
 #define LOGGER_TASK_MESSAGING
 //#define MAIN_HEARTBEAT_REQUEST
+
+#define DEBUG printf
 #endif

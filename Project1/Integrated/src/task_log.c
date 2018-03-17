@@ -35,18 +35,21 @@ void *task_log(void *param)
 					  // printf ("Timestamp: %s", ctime(&log_msg.timeStamp));
 					  // printf ("Log Level: %s \n", levels[log_msg.type]);
 					  // printf ("Message Data: %s \n", log_msg.msg);
+            DEBUG("[DEBUF] LOGGER task received LOG_MSG request.\n");
 					  status = log_data(&pfile, &log_msg, fileName);
+            DEBUG("[DEBUG] LOGGER task logged data.\n");
 					  break;
 				  case HEART_BEAT:
-					  printf("*******log heartbeat request\n");
-					  log_msg = create_message_struct(LOGGER_THREAD, MAINTHREAD, HEARTBEAT,
-							                            HEART_BEAT);
+					  DEBUG("[DEBUF] LOGGER task received HEARTBEAT request.\n");
+					  log_msg = create_message_struct(LOGGER_THREAD, MAINTHREAD, HEARTBEAT, HEART_BEAT);
 					  info.data = log_msg;
 					  info.thread_mutex_lock = main_queue_mutex;
 					  info.qName = MAIN_QUEUE;
 					  status = msg_send(&info);
+            DEBUG("[DEBUG] LOGGER task responded to HEARTBEAT request.\n");
 					  break;
 				  case SHUT_DOWN:
+            DEBUG("[DEBUF] LOGGER task received SHUTDOWN request.\n");
             status = ERROR;
             break; //EXIT CODE
 				  default:;
@@ -70,7 +73,7 @@ static Status_t log_data(FILE **pfile, Message_t *message, const char *fileName)
 
 	if((*pfile=fopen(fileName,"a+")) == NULL)
 	{
-		printf("Error in Creating/Opening File\n");
+		DEBUG("Error in Creating/Opening File\n");
 		return ERROR;
 	}
 
@@ -81,7 +84,7 @@ static Status_t log_data(FILE **pfile, Message_t *message, const char *fileName)
 
 	if(fwrite(logData, strlen(logData), 1, *pfile) < 0)
 	{
-		printf("Error in Writing Data");
+		DEBUG("Error in Writing Data");
 		return ERROR;
 	}
 
