@@ -1,0 +1,4 @@
+# verify sensor read/byte order
+# fix clean up routine
+# verify pin interrupts
+# apds APIs

@@ -4,7 +4,7 @@
 * Redistribution, modification or use of this software in source or binary
 * forms is permitted as long as the files maintain this copyright. Users are
 * permitted to modify this and use it to learn about the field of embedded
-* software. Akshit Shah, Shuting Guo, Prof Alex Fosdick and the University of Colorado are 
+* software. Akshit Shah, Shuting Guo, Prof Alex Fosdick and the University of Colorado are
 * not liable for any misuse of this material.
 ***************************************************************************************************/
 /***************************************************************************************************
@@ -12,7 +12,7 @@
 * @date : 02/22/2018
 *
 * @file : api.h
-* @brief : This header file provides an abstraction of thread definations and initialization 
+* @brief : This header file provides an abstraction of thread definations and initialization
            variables.
 ***************************************************************************************************/
 #ifndef API_H_
@@ -20,13 +20,20 @@
 
 #define MAX_PAYLOAD_SIZE (20)
 
+#define LOGGER_QUEUE	"/qlogger"
+#define TEMP_QUEUE		"/qtemp"
+#define LIGHT_QUEUE		"/qlight"
+#define MAIN_QUEUE		"/qmain"
+#define SOCKET_QUEUE	"/qsocket"
+#define QUEUE_SIZE		(1024)
+
 typedef enum _Status_t
 {
 	ERROR,
-    SUCCESS, 
-    
-    /*Add new states above this line*/
-    ERROR_MAX
+  SUCCESS,
+
+  /*Add new states above this line*/
+  ERROR_MAX
 } Status_t;
 
 typedef enum _RequesId_t
@@ -38,7 +45,7 @@ typedef enum _RequesId_t
     GET_LIGHT,
     GET_LIGHT_STATE,
     SHUT_DOWN,
-    
+
     /*Add new states above this line*/
     REQUEST_MAX
 } RequestId_t;
@@ -50,7 +57,7 @@ typedef enum _Source_t
     TEMP_THREAD,
     LIGHT_THREAD,
     SOCKET_THREAD,
-    
+
     /*Add new states above this line*/
     SOURCE_MAX
 } Source_t;
@@ -62,7 +69,7 @@ typedef enum _Dest_t
     TEMPTHREAD,
     LIGHTTHREAD,
     SOCKETTHREAD,
-    
+
     /*Add new states above this line*/
     DEST_MAX
 } Dest_t;
@@ -71,10 +78,10 @@ typedef enum _LogLevel_t
 {
     INFO,
     WARNING,
-    ERROR,
+    ERROR_MSG,
     HEARTBEAT,
     INIT,
-    
+
     /*Add new states above this line*/
     LEVEL_MAX
 } LogLevel_t;
@@ -97,16 +104,29 @@ typedef struct _ThreadInfo_t
 	const char *qName;
 } ThreadInfo_t;
 
+
+extern pthread_mutex_t log_queue_mutex;
+extern pthread_mutex_t temp_queue_mutex;
+extern pthread_mutex_t main_queue_mutex;
+extern pthread_mutex_t light_queue_mutex;
+extern pthread_mutex_t socket_queue_mutex;
+
+extern int32_t log_queue_flag;
+extern int32_t temp_queue_flag;
+extern int32_t light_queue_flag;
+extern int32_t socket_queue_flag;
+extern int32_t main_queue_flag;
+
+extern char *task[];
+extern char *levels[];
 /*FUNCTION PROTOTYPES*/
 Message_t create_message_struct(Source_t src, Dest_t dest, LogLevel_t level,
 							RequestId_t req);
-void update_flag(Dest_t dest);
-
-Status_t log_data(FILE **pfile, Message_t *message, char *fileName);
-Status_t get_log_file(FILE **pfile, char *fileName);
+void update_queue_flag(Dest_t dest);
 Status_t msg_send(ThreadInfo_t *info);
 Status_t msg_receive(ThreadInfo_t *info);
-Status_t request_heartbeat();
 Status_t msg_log(ThreadInfo_t *info);
+
+//Status_t request_heartbeat();
 
 #endif /* API_H_ */
