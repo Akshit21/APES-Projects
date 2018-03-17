@@ -1,13 +1,3 @@
-/*#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-*/
 #include "project.h"
 
 #define PORT_NO (9999)
@@ -36,21 +26,21 @@ int main(int argc, char const *argv[])
   while(1)
   {
   	scanf("%d", &socket_msg_req.requestId);
-  if(connect(socketfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))==0)
-  {
-      write(socketfd, &socket_msg_req, sizeof(socket_msg_req));
-      sleep(2);
-      read(socketfd, &socket_msg_resp, sizeof(socket_msg_resp));
-   	printf("read something\n");	
-      shutdown(socketfd, SHUT_RDWR);
-      process_msg(&socket_msg_resp);
+  	if(connect(socketfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))==0)
+  	{
+      		write(socketfd, &socket_msg_req, sizeof(socket_msg_req));
+      		sleep(2);
+      		read(socketfd, &socket_msg_resp, sizeof(socket_msg_resp));
+   		printf("read something\n");	
+      		shutdown(socketfd, SHUT_RDWR);
+      		process_msg(&socket_msg_resp);
+  	}
+  	else
+  	{
+    		perror("Failed to connect.\n");
+    		exit(EXIT_FAILURE);
+  	}
   }
-  else
-  {
-    perror("Failed to connect.\n");
-    exit(EXIT_FAILURE);
-  }
-	}
   exit(EXIT_SUCCESS);
 }
 

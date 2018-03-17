@@ -1,24 +1,33 @@
 #include "project.h"
 
-
 int main(int argc, char const *argv[])
 {
   pthread_t thread1, thread2, thread3, thread4;
   int32_t tmp_handle, apds_handle;
+  Status_t status;
 
   /* Connect the sensor */
 #ifdef TEMP_TASK
-  if(tmp1021_init(&tmp_handle)==-1)
-  	printf("tmp init failed\n");
+  if((status = tmp1021_init(&tmp_handle))==ERROR)
+  {
+    DEBUG("[DEBUG] Failed to initialize the tmp1021 sensor.\n");
+  }
 #endif
 
 #ifdef LIGHT_TASK
-  apds9301_init(&apds_handle);
+  if((statu = apds9301_init(&apds_handle))==ERRRO)
+  {
+    DEBUG("[DEBUF] Failed to initialize the apds9301 sensor.\n");
+  }
 #endif
 
 #ifdef SENSOR_STARTUP_TEST
   /* Sensor startup test */
-
+  if(status == ERROR)
+  {
+    DEBUG("[DEBUG] Sensor start up test failed, exit.\n");
+    exit(EXIT_FAILURE);
+  }
 #endif
 
   /* Create task threads */
