@@ -38,6 +38,7 @@ void test_apds9301(void** state)
                                         (uint8_t)POWER_ON), 0);
   assert_int_equal(i2c_read_byte_mutex(apds_handle, CMD | CONTROL_REG,
                                        &read_byte), 0);
+  read_byte &= 0x03;
   assert_true(read_byte == (uint8_t)POWER_ON);
 
   /* Test setting up thresholds and interrupt */
