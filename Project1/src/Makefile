@@ -11,7 +11,7 @@ CMOCKA_BUILD_DIR = ../cmocka/build-Debug
 # library
 #
 LIB_SRCS = user_i2c.c helper.c task_apds.c task_socket.c task_tmp.c task_log.c \
-          api.c led.c
+          message.c led.c
 LIB_OBJS = $(LIB_SRCS:%.c=%.o)
 LIB_INCLUDE_DIR = ../include
 LIB_HEADERS = $(LIB_SRCS:%.c=%.h)
@@ -39,7 +39,7 @@ CFLAGS = -std=gnu11 -Wall -g -O0
 CMOCKA_CFLAGS = $(CFLAGS) -I $(CMOCKA_INCLUDE_DIR)
 UNITTEST_CFLAGS = $(CFLAGS) -L $(CMOCKA_LIBRARY) -I $(CMOCKA_INCLUDE_DIR) -I $(LIB_INCLUDE_DIR)
 MAIN_CFLAGS = $(CFLAGS) -I $(LIB_INCLUDE_DIR)
-UNITTEST_LFLAGS = -lcmocka
+UNITTEST_LFLAGS = -lcmocka -lrt
 MAIN_LFLAGS = -pthread -lrt -lm
 #
 # Generic rule to generate objects
