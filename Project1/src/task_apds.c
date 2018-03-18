@@ -113,9 +113,15 @@ void * task_light(void * param)
        /* Failed to read from sensors consecutively */
        if(op_flag==0)
        {
-        //error
         DEBUG("[DEBUG] Failed to change light stats.\n");
+        apds_msg = create_message_struct(LIGHT_THREAD, LOGGERTHREAD, ERROR, LOG_MSG);
+        sprintf(apds_msg.msg,"Light sensor failed");
+        info.data = apds_msg;
+        info.thread_mutex_lock = log_queue_mutex;
+        info.qName = LOGGER_QUEUE;
+        status = msg_log(&info);
         status = ERROR;
+        blinkLED();
        }
        else
        {

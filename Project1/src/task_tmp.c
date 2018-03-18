@@ -130,7 +130,14 @@ void * task_tmp(void * param)
     {
       // Error
       DEBUG("[DEBUG] Failed to read from sensor consecutively. Exit.\n");
+			tmp_msg = create_message_struct(TEMP_THREAD, LOGGERTHREAD, ERROR, LOG_MSG);
+			sprintf(tmp_msg.msg,"Tempreature sensor failed.");
+			info.data = tmp_msg;
+			info.thread_mutex_lock = log_queue_mutex;
+			info.qName = LOGGER_QUEUE;
+			status = msg_log(&info);
       status = ERROR;
+			blinkLED();
     }
     else
     {
