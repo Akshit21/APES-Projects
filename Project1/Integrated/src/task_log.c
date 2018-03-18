@@ -90,6 +90,14 @@ void *task_log(void *param)
   pthread_exit(NULL);
 }
 
+/**
+* @brief Function to log data to file
+*
+* @param pfile - a pointer to the file handle
+*        message - a pointer to the message structure to log
+*        fileName - name of the file
+* @return Status SUCCES/ERROR
+*/
 Status_t log_data(FILE **pfile, Message_t *message, const char *fileName)
 {
 	if(*pfile == NULL)	return ERROR;

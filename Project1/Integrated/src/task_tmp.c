@@ -38,6 +38,7 @@ static Status_t tmp1021_get_threshold_ext(int32_t dev_fp, uint8_t thresh_reg, ui
 static float tmp_raw_to_temperature(int16_t raw);
 
 #ifdef TEMP_TASK
+/* Timer rountine */
 void tmp_timer_handler(union sigval arg)
 {
 	DEBUG("[DEBUG] TMP timer timeout.\n");
@@ -227,6 +228,13 @@ void * task_tmp(void * param)
  * Below are TMP1021 Utility APIs
  */
 
+ /**
+ * @brief Function to initialize the tmp1021 sensor
+ *
+ * @param a handle to store the file descriptor
+ *
+ * @return Status SUCCES/ERROR
+ */
 Status_t tmp1021_init(int32_t *dev_fp)
 {
   /* Connect the tmp1021 to the i2c interface */
@@ -241,6 +249,13 @@ Status_t tmp1021_init(int32_t *dev_fp)
   return SUCCESS;
 }
 
+/**
+* @brief Function to enable the shutdown mode of the tmp1021 sensor
+*
+* @param a handle to to the device file descriptor
+*
+* @return Status SUCCES/ERROR
+*/
 static Status_t tmp1021_shutdown_enable(int32_t dev_fp)
 {
   uint16_t reg;
@@ -254,6 +269,14 @@ static Status_t tmp1021_shutdown_enable(int32_t dev_fp)
   }
   return SUCCESS;
 }
+
+/**
+* @brief Function to disable the shutdown mode of the tmp1021 sensor
+*
+* @param a handle to to the device file descriptor
+*
+* @return Status SUCCES/ERROR
+*/
 
 static Status_t tmp1021_shutdown_disable(int32_t dev_fp)
 {
@@ -269,6 +292,14 @@ static Status_t tmp1021_shutdown_disable(int32_t dev_fp)
   return SUCCESS;
 }
 
+/**
+* @brief Function to set the conversion rate of the tmp1021 sensor
+*
+* @param dev_fp - a handle to to the device file descriptor
+*        rate - the rate to set
+*
+* @return Status SUCCES/ERROR
+*/
 static Status_t tmp1021_set_conversion_rate(int32_t dev_fp, uint16_t rate)
 {
   uint16_t reg;
@@ -283,6 +314,14 @@ static Status_t tmp1021_set_conversion_rate(int32_t dev_fp, uint16_t rate)
   return SUCCESS;
 }
 
+/**
+* @brief Function to get the shutdown mode of the tmp1021 sensor
+*
+* @param dev-fp - a handle to to the device file descriptor
+*        rate - a pointer to a variable to store the rate read
+*
+* @return Status SUCCES/ERROR
+*/
 static Status_t tmp1021_get_conversion_rate(int32_t dev_fp, uint16_t * rate)
 {
   uint16_t reg;
@@ -291,6 +330,16 @@ static Status_t tmp1021_get_conversion_rate(int32_t dev_fp, uint16_t * rate)
   *rate = reg & CONFIG_CR_MASK;
   return SUCCESS;
 }
+
+/**
+* @brief Function to set the em mode of the tmp1021 sensor
+*
+* @param dev_fp - a handle to to the device file descriptor
+*        em_mode - the mode to set, only two modes are valid:
+									 CONFIG_EM_NORMAL_MODE / CONFIG_EM_EXTENDED_MODE
+*
+* @return Status SUCCES/ERROR
+*/
 
 static Status_t tmp1021_set_em_mode(int32_t dev_fp, uint16_t em_mode)
 {
@@ -306,6 +355,15 @@ static Status_t tmp1021_set_em_mode(int32_t dev_fp, uint16_t em_mode)
   return SUCCESS;
 }
 
+/**
+* @brief Function to get the em mode of the tmp1021 sensor
+*
+* @param dev_fp - a handle to to the device file descriptor
+*        em_mode - a pointer to a variable to store the mode read
+*
+* @return Status SUCCES/ERROR
+*/
+
 static Status_t tmp1021_get_em_mode(int32_t dev_fp, uint16_t * em_mode)
 {
   uint16_t reg;
@@ -315,6 +373,17 @@ static Status_t tmp1021_get_em_mode(int32_t dev_fp, uint16_t * em_mode)
   return SUCCESS;
 }
 
+/**
+* @brief Function to set the fault queue of the tmp1021 sensor
+*
+* @param dev_fp - a handle to to the device file descriptor
+*		     faults_num - the number of consecutive faults to set, only below are valid:
+*					CONFIG_FQ_CONSECUTIVE_FAULTS_1
+*					CONFIG_FQ_CONSECUTIVE_FAULTS_2
+*					CONFIG_FQ_CONSECUTIVE_FAULTS_3
+*					CONFIG_FQ_CONSECUTIVE_FAULTS_4
+* @return Status SUCCES/ERROR
+*/
 static Status_t tmp1021_set_fault_queue(int32_t dev_fp, uint16_t faults_num)
 {
   uint16_t reg;
@@ -329,6 +398,14 @@ static Status_t tmp1021_set_fault_queue(int32_t dev_fp, uint16_t faults_num)
   return SUCCESS;
 }
 
+/**
+* @brief Function to get the fault queue setting of the tmp1021 sensor
+*
+* @param dev_fp - a handle to to the device file descriptor
+*				 fault_num - a pointer to the variable to store the value read
+*
+* @return Status SUCCES/ERROR
+*/
 static Status_t tmp1021_get_fault_queue(int32_t dev_fp, uint16_t * fault_num)
 {
   uint16_t reg;
@@ -338,6 +415,15 @@ static Status_t tmp1021_get_fault_queue(int32_t dev_fp, uint16_t * fault_num)
   return SUCCESS;
 }
 
+/**
+* @brief Function to set the int thresholds of the tmp1021 sensor
+*
+* @param dev_fp - a handle to to the device file descriptor
+*        thresh_reg - the address of the threshold register
+*				 value - threshold value to set
+*
+* @return Status SUCCES/ERROR
+*/
 static Status_t tmp1021_set_threshold(int32_t dev_fp, uint8_t thresh_reg, uint16_t value)
 {
   value <<= 4;
@@ -346,6 +432,15 @@ static Status_t tmp1021_set_threshold(int32_t dev_fp, uint8_t thresh_reg, uint16
 	return SUCCESS;
 }
 
+/**
+* @brief Function to get the int thresholds of the tmp1021 sensor
+*
+* @param dev_fp - a handle to to the device file descriptor
+*        thresh_reg - the address of the threshold register
+*				 value - a pointer to the variable to store the threshold value read
+*
+* @return Status SUCCES/ERROR
+*/
 static Status_t tmp1021_get_threshold(int32_t dev_fp, uint8_t thresh_reg, uint16_t * value)
 {
   if(i2c_read_word_mutex(dev_fp, thresh_reg, value)==-1)
@@ -354,6 +449,15 @@ static Status_t tmp1021_get_threshold(int32_t dev_fp, uint8_t thresh_reg, uint16
   return SUCCESS;
 }
 
+/**
+* @brief Function to set the int thresholds of the tmp1021 sensor in extended mode
+*
+* @param dev_fp - a handle to to the device file descriptor
+*        thresh_reg - the address of the threshold register
+*				 value - threshold value to set
+*
+* @return Status SUCCES/ERROR
+*/
 static Status_t tmp1021_set_threshold_ext(int32_t dev_fp, uint8_t thresh_reg, uint16_t value)
 {
   value <<= 3;
@@ -361,6 +465,16 @@ static Status_t tmp1021_set_threshold_ext(int32_t dev_fp, uint8_t thresh_reg, ui
       return ERROR;
 	return SUCCESS;
 }
+
+/**
+* @brief Function to get the int thresholds of the tmp1021 sensor in extended mode
+*
+* @param dev_fp - a handle to to the device file descriptor
+*        thresh_reg - the address of the threshold register
+*				 value - a pointer to the variable to store the threshold value read
+*
+* @return Status SUCCES/ERROR
+*/
 
 static Status_t tmp1021_get_threshold_ext(int32_t dev_fp, uint8_t thresh_reg, uint16_t * value)
 {
@@ -370,6 +484,13 @@ static Status_t tmp1021_get_threshold_ext(int32_t dev_fp, uint8_t thresh_reg, ui
   return SUCCESS;
 }
 
+/**
+* @brief Function to convert raw digital data to temperature value in degree C
+*
+* @param raw - raw value
+*
+* @return Status SUCCES/ERROR
+*/
 static float tmp_raw_to_temperature(int16_t raw)
 {
   float temperature;
@@ -381,6 +502,7 @@ static float tmp_raw_to_temperature(int16_t raw)
 	  raw += 1;
 	  temperature = -(raw*0.0625);
   }
+	/* If the value is positive */
   else
   	temperature  = raw * 0.0625;
 

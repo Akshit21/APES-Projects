@@ -25,16 +25,17 @@ sem_t apds_sem;
 char *light_state_s[] = {"DAY", "NIGHT"};
 int32_t light_state;
 
-static Status_t apds_update_state(int32_t dev_fp, uint32_t state);
+static Status_t apds_update_state(int32_t dev_fp);
+
 static float apds_raw_to_lux(int16_t ch0, int16_t ch1);
 
 #ifdef LIGHT_TASK_ALERT
+/* Light interrupt IRQ */
 void apds_irq_handler(int signo)
 {
   if(signo == SIGIO)
   {
     DEBUG("[DEBUG] Light state change interrupted.\n");
-    /* Clear the apds interrupt assertion */
   	sem_post(&apds_sem);
   }
 }
@@ -61,24 +62,20 @@ void * task_light(void * param)
   apds_irq_action.sa_flags = 0;
   if(sigaction(SIGIO, &apds_irq_action, NULL)!=0)
   {
-    // Error log
     DEBUG("[DEBUG] sigaction failed.\n");
     status = ERROR;
   }
   if((apds_irq_handle=open("/dev/gpio_int", O_RDWR))<0)
   {
-    // Error log
     status = ERROR;
   }
   if(fcntl(apds_irq_handle, F_SETOWN, getpid())==-1)
   {
-    // Error log
     status = ERROR;
   }
   if(fcntl(apds_irq_handle, F_SETFL,
            fcntl(apds_irq_handle, F_GETFL) | FASYNC) == -1)
   {
-    // Error log
     status = ERROR;
   }
 #endif
@@ -86,23 +83,22 @@ void * task_light(void * param)
   /* Initialzie a semephore for ligth state change event */
   if(sem_init(&apds_sem, 0, 0)==-1)
   {
-      //error log
       status = ERROR;
   };
 
   while(status == SUCCESS)
   {
     sleep(1);
-    /* Enqueue state changes to the msg queue */
 
     /* Wait for light state change event */
     if(sem_timedwait(&apds_sem, &sem_timeout)!=-1)
     {
 	     i2c_write_byte_mutex(apds_handle, CMD|CLEAR|CONTROL_REG, 0x03);
        /* Update light state */
-	apds_update_state(apds_handle, light_state);
+	     apds_update_state(apds_handle);
        while((retry<=RETRY_MAX)&&(op_flag==0))
        {
+         /* Read value from both channel */
          if((i2c_read_word_mutex(apds_handle, CMD | WORD | DATA0_REG, &ch0_data)!=0) ||
             (i2c_read_word_mutex(apds_handle, CMD | WORD | DATA1_REG, &ch1_data)!=0))
          {
@@ -125,9 +121,11 @@ void * task_light(void * param)
        {
 	        DEBUG("[DEBUG] LIGHT task updated light state to: %s\n", light_state_s[light_state]);
           op_flag = 0;
-	  light = apds_raw_to_lux(ch0_data, ch1_data);
-	  DEBUG("[DEBUG] LIGHT task get light: %.3f lux\n", light);
+          /* Calculate lux */
+	        light = apds_raw_to_lux(ch0_data, ch1_data);
+	        DEBUG("[DEBUG] LIGHT task get light: %.3f lux\n", light);
 #ifdef LIGHT_TASK_MESSAGING
+          /* Enqueue the light state change info to log queue */
           apds_msg = create_message_struct(LIGHT_THREAD, LOGGERTHREAD, INFO, LOG_MSG);
           sprintf(apds_msg.msg,"Light state changed to: %s",light_state_s[light_state]);
           info.data = apds_msg;
@@ -206,6 +204,13 @@ void * task_light(void * param)
 
 #endif
 
+/**
+* @brief Function to initialize the apds9301 sensor
+*
+* @param a handle to store the file descriptor
+*
+* @return Status SUCCES/ERROR
+*/
 Status_t apds9301_init(int32_t *dev_fp)
 {
   uint16_t ch0_data;
@@ -224,7 +229,7 @@ Status_t apds9301_init(int32_t *dev_fp)
     return ERROR;
   light_state = ch0_data < DEFAULT_THRESH_VALUE ? LIGHT_STATE_DAY : LIGHT_STATE_NIGHT;
   /* Update the thresholds */
-  if(apds_update_state(*dev_fp, light_state)==ERROR)
+  if(apds_update_state(*dev_fp)==ERROR)
     return ERROR;
   /* Set up interrupt */
   if(i2c_write_byte_mutex(*dev_fp, CMD | INTERRUPT_REG,
@@ -236,9 +241,16 @@ Status_t apds9301_init(int32_t *dev_fp)
   return SUCCESS;
 }
 
-static Status_t apds_update_state(int32_t dev_fp, uint32_t state)
+/**
+* @brief Function to update the light state
+*
+* @param a handle to store the file descriptor
+*
+* @return Status SUCCES/ERROR
+*/
+static Status_t apds_update_state(int32_t dev_fp)
 {
-  switch(state)
+  switch(light_state)
   {
     case LIGHT_STATE_DAY:
       light_state = LIGHT_STATE_NIGHT;
@@ -263,6 +275,14 @@ static Status_t apds_update_state(int32_t dev_fp, uint32_t state)
   return SUCCESS;
 }
 
+/**
+* @brief Function to convert raw sensor data to lux value
+*
+* @param ch0 - value from channel 0
+*        ch1 - value from channel 1
+*
+* @return value in lux
+*/
 static float apds_raw_to_lux(int16_t ch0, int16_t ch1)
 {
   float lux;

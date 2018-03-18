@@ -30,6 +30,14 @@
 
 i2c_lock_t lock;
 
+/**
+* @brief Function to write a byte via i2c
+*
+* @param dev_fp - a handle to device
+*        reg_addr - the address of the register to wirte
+*        value - the value to right
+* @return 0 - Success | 1 - Failure
+*/
 int32_t i2c_write_byte(int32_t dev_fp, uint8_t reg_addr,
                       uint8_t value)
 {
@@ -45,6 +53,16 @@ int32_t i2c_write_byte(int32_t dev_fp, uint8_t reg_addr,
   return ret;
 }
 
+/**
+* @brief Function to read a byte via i2c
+*
+* @param dev_fp - a handle to device
+*        reg_addr - the address of the register to read from
+*        rbuff -  pointer to variable to store the read
+*        num - number of bytes to read
+*
+* @return 0 - Success | 1 - Failure
+*/
 int32_t i2c_read_byte(int32_t dev_fp, uint8_t reg_addr,
                      uint8_t *rbuff, uint32_t num)
 {
@@ -63,6 +81,14 @@ int32_t i2c_read_byte(int32_t dev_fp, uint8_t reg_addr,
   return ret;
 }
 
+/**
+* @brief Function to connect a i2c device
+*
+* @param dev_fp - pointer to a variable to store the device handle
+*        dev_addr - the address of the device
+*
+* @return 0 - Success | 1 - Failure
+*/
 int32_t i2c_connect(int32_t *dev_fp, int32_t dev_addr)
 {
   int32_t ret = 0;
@@ -79,20 +105,30 @@ int32_t i2c_connect(int32_t *dev_fp, int32_t dev_addr)
   return ret;
 }
 
+/**
+* @brief Function to disconnect a i2c device
+*
+* @param dev_fp - a handle to device
+*
+*/
 void i2c_disconnect(int32_t dev_fp)
 {
   close(dev_fp);
 }
 
+/**
+* @brief Function to write a byte via i2c with mutex protection
+*
+* @param dev_fp - a handle to device
+*        reg_addr - the address of the register to wirte
+*        value - the value to right
+* @return 0 - Success | 1 - Failure
+*/
 int32_t i2c_write_byte_mutex(int32_t dev_fp, uint8_t reg_addr,
                             uint8_t value)
 {
   int32_t ret = 0;
-  // uint8_t write_buff[2];
-  // write_buff[0] = reg_addr;
-  // write_buff[1] = value;
   pthread_mutex_lock(&lock.mutex);
-  //if(write(dev_fp, write_buff, 2) != 2)
   if(i2c_smbus_write_byte_data(dev_fp, reg_addr, value)==-1)
   {
     perror("Failed to write to the device.\n");
@@ -102,6 +138,14 @@ int32_t i2c_write_byte_mutex(int32_t dev_fp, uint8_t reg_addr,
   return ret;
 }
 
+/**
+* @brief Function to write a word via i2c with mutex protection
+*
+* @param dev_fp - a handle to device
+*        reg_addr - the address of the register to wirte
+*        value - the value to right
+* @return 0 - Success | 1 - Failure
+*/
 int32_t i2c_write_word_mutex(int32_t dev_fp, uint8_t reg_addr,
                              uint16_t value)
 {
@@ -116,21 +160,19 @@ int32_t i2c_write_word_mutex(int32_t dev_fp, uint8_t reg_addr,
     return ret;
 }
 
+/**
+* @brief Function to read a byte via i2c with mutex protection
+*
+* @param dev_fp - a handle to device
+*        reg_addr - the address of the register to read from
+*        rbuff -  pointer to variable to store the read
+* @return 0 - Success | 1 - Failure
+*/
 int32_t i2c_read_byte_mutex(int32_t dev_fp, uint8_t reg_addr,
                            uint8_t *rbuff)
 {
   int32_t ret = 0;
   pthread_mutex_lock(&lock.mutex);
-  // if(write(dev_fp, &reg_addr, 1)!=1)
-  // {
-  //   perror("Failed to write the read register address.\n");
-  //   ret = -1;
-  // }
-  // if(read(dev_fp, rbuff, num)!=num)
-  // {
-  //   perror("Failed to read from device.\n");
-  //   ret = -1;
-  // }
   if((*rbuff=i2c_smbus_read_byte_data(dev_fp, reg_addr))==-1)
   {
     perror("Failed to read from device.\n");
@@ -140,6 +182,14 @@ int32_t i2c_read_byte_mutex(int32_t dev_fp, uint8_t reg_addr,
   return ret;
 }
 
+/**
+* @brief Function to read a word via i2c with mutex protection
+*
+* @param dev_fp - a handle to device
+*        reg_addr - the address of the register to read from
+*        rbuff -  pointer to variable to store the read
+* @return 0 - Success | 1 - Failure
+*/
 int32_t i2c_read_word_mutex(int32_t dev_fp, uint8_t reg_addr,
                             uint16_t * rbuff)
 {
@@ -154,6 +204,14 @@ int32_t i2c_read_word_mutex(int32_t dev_fp, uint8_t reg_addr,
   return ret;
 }
 
+/**
+* @brief Function to connect a i2c device with mutext protection
+*
+* @param dev_fp - pointer to a variable to store the device handle
+*        dev_addr - the address of the device
+*
+* @return 0 - Success | 1 - Failure
+*/
 int32_t i2c_connect_mutex(int32_t *dev_fp, int32_t dev_addr)
 {
   int32_t ret = 0;
@@ -180,6 +238,12 @@ int32_t i2c_connect_mutex(int32_t *dev_fp, int32_t dev_addr)
   return ret;
 }
 
+/**
+* @brief Function to disconnect a i2c device with mutex protection
+*
+* @param dev_fp - a handle to device
+*
+*/
 void i2c_disconnect_mutex(int32_t dev_fp)
 {
   close(dev_fp);

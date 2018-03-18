@@ -48,7 +48,7 @@ void * task_socket(void* param)
   serv_addr.sin_addr.s_addr = INADDR_ANY;
   /* Bind to the port */
   serv_addr.sin_port = htons(portno);
-  
+
   /* Bind the socket to the current IP address on port */
   if(bind(socketfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr))<0)
   {
@@ -173,6 +173,14 @@ void * task_socket(void* param)
   pthread_exit(NULL);
 }
 
+/**
+* @brief Function to wait for request in a non-blocking manner
+*
+* @param socket_handle - the handle to the socket
+*        timeout_s - time out time in second
+*
+* @return Status SUCCES/ERROR
+*/
 static int32_t accept_client_timeout(int32_t socket_handle, int32_t timeout_s)
 {
 	int32_t ret;
@@ -183,7 +191,7 @@ static int32_t accept_client_timeout(int32_t socket_handle, int32_t timeout_s)
 
 	tv.tv_sec = (long)timeout_s;
 	tv.tv_usec = 0;
-	
+
 	if((ret=select(socket_handle+1, &rfds, (fd_set *)0, (fd_set*)0, &tv))>0)
 	{
 			return accept(socket_handle, NULL, NULL);

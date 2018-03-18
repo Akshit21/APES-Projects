@@ -29,7 +29,23 @@ void * task_light(void * param);
 void * task_socket(void * param);
 void * task_log(void * param);
 
+
+/**
+* @brief Function to initialize the tmp1021 sensor
+*
+* @param a handle to store the file descriptor
+*
+* @return Status SUCCES/ERROR
+*/
 Status_t tmp1021_init(int32_t *dev_fp);
+
+/**
+* @brief Function to initialize the apds9301 sensor
+*
+* @param a handle to store the file descriptor
+*
+* @return Status SUCCES/ERROR
+*/
 Status_t apds9301_init(int32_t *dev_fp);
 
 
