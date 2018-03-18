@@ -1,6 +1,7 @@
 #ifndef _PROJECT_H__
 #define _PROJECT_H__
 
+/* Standard Include */
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -23,6 +24,7 @@
 #include <mqueue.h>
 #include <sys/types.h>
 
+/* Custom Includes */
 #include "message.h"
 #include "task.h"
 #include "user_i2c.h"
@@ -32,6 +34,7 @@
 #include "led.h"
 
 #define SENSOR_STARTUP_TEST
+/* Compile time switch for debugging */
 #define TEMP_TASK
 //#define TEMP_TASK_ALERT
 #define TEMP_TASK_MESSAGING
@@ -42,6 +45,6 @@
 #define LOGGER_TASK
 #define LOGGER_TASK_MESSAGING
 #define MAIN_HEARTBEAT_REQUEST
-
 #define DEBUG printf
-#endif
+
+#endif /* _PROJECT_H__ */

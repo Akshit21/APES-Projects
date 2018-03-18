@@ -181,6 +181,8 @@ void * task_light(void * param)
   i2c_disconnect_mutex(apds_handle);
   pthread_mutex_destroy(&light_queue_mutex);
   mq_unlink(LIGHT_QUEUE);
+  /* Blink LED */
+  blinkLED();
   pthread_exit(NULL);
 }
 

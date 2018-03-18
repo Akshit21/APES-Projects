@@ -197,6 +197,8 @@ void * task_tmp(void * param)
   i2c_disconnect_mutex(tmp_handle);
   pthread_mutex_destroy(&temp_queue_mutex);
   mq_unlink(TEMP_QUEUE);
+	/* Blink LED */
+  blinkLED();
   pthread_exit(NULL);
 }
 #endif

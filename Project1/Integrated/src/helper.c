@@ -1,5 +1,6 @@
 #include "project.h"
 
+/* Function to setup timer and sigevent */
 int32_t timer_setup(timer_t *timer_id, uint32_t ms, void (*handler))
 {
 	struct itimerspec ts;
