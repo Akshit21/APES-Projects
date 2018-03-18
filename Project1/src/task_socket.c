@@ -20,13 +20,11 @@
 ***************************************************************************************************/
 #include "project.h"
 
-<<<<<<< HEAD
 /* SOCKET THREAD */
-=======
+
 
 static int32_t accept_client_timeout(int32_t socket_handle, int32_t timeout_s);
 
->>>>>>> 0bd442a36e9ad7e440711cbe8f67118299797c28
 void * task_socket(void* param)
 {
   /* Local Variables */

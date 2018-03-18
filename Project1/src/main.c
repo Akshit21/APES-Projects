@@ -121,10 +121,10 @@ msg_send(&info);
       main_msg = info.data;
       if (main_msg.requestId == HEART_BEAT)
       {
-        DEBUG ([DEBUG] "Source ID: %d \n", main_msg.sourceId);
-        DEBUG ([DEBUG] "Timestamp: %s", ctime(&main_msg.timeStamp));
-        DEBUG ([DEBUG] "Log Level: %s \n", levels[main_msg.type]);
-        DEBUG ([DEBUG] "Message Data: %s \n", main_msg.msg);
+        DEBUG ("[DEBUG] Source ID: %d \n", main_msg.sourceId);
+        DEBUG ("[DEBUG] Timestamp: %s", ctime(&main_msg.timeStamp));
+        DEBUG ("[DEBUG] Log Level: %s \n", levels[main_msg.type]);
+        DEBUG ("[DEBUG] Message Data: %s \n", main_msg.msg);
         heartbeat_monitor[main_msg.sourceId - 1]++;
       }
     }
@@ -136,11 +136,7 @@ msg_send(&info);
       {
         if(heartbeat_monitor[i-1] == 0)
         {
-<<<<<<< HEAD
-          DEBUG([WARNING] "Call Cleanup\n");
-=======
-			DEBUG("[DEBUG] %d thread did not respond. Call Cleanup======================================\n", i-1);
->>>>>>> 0bd442a36e9ad7e440711cbe8f67118299797c28
+		DEBUG("[DEBUG] id: %d thread did not respond. Call Cleanup.\n", i-1);
           /*Try logging if Logger Thread is active*/
           if(heartbeat_monitor[0])
           {
@@ -154,7 +150,7 @@ msg_send(&info);
             /* Blink LED */
             blinkLED();
           }
-          //Cleanup_routine();
+       
         }
         heartbeat_monitor[i-1] = 0;
       }

@@ -73,7 +73,7 @@ test : $(UNITTEST_EXE)
 
 .PHONY : clean
 clean : FORCE
-	-rm -rf *~ *.o  $(LIB) $(EXE) $(UNITTEST_EXE) *.dSYM/ *.txt *.out
+	-rm -rf *~ *.o  $(LIB) $(EXE) $(UNITTEST_EXE) *.dSYM/ *.out
 
 .PHONY : cmocka_uninstall
 cmocka_uninstall :
