@@ -160,8 +160,8 @@ void * task_tmp(void * param)
 					info.data = tmp_msg;
 					info.thread_mutex_lock = socket_queue_mutex;
 					info.qName = SOCKET_QUEUE;
-					DEBUG("[DEBUG] TMP task responded to GET_TEMP_C request.\n");
 					msg_send(&info);
+					DEBUG("[DEBUG] TMP task responded to GET_TEMP_C request.\n");
 					break;
         case GET_TEMP_K:
 					DEBUG("[DEBUG] TMP task received GET_TEMP_K request.\n");

@@ -97,7 +97,7 @@ msg_send(&info);
         heartbeat_monitor[main_msg.sourceId - 1]++;
       }
     }
-    sleep(5);
+    sleep(10);
     if(chance == 3)
     {
       chance = 0;
@@ -105,7 +105,7 @@ msg_send(&info);
       {
         if(heartbeat_monitor[i-1] == 0)
         {
-          printf("Call Cleanup\n");
+			DEBUG("[DEBUG] %d thread did not respond. Call Cleanup======================================\n", i-1);
           /*Try logging if Logger Thread is active*/
           if(heartbeat_monitor[0])
           {

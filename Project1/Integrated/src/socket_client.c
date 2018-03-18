@@ -29,7 +29,7 @@ int main(int argc, char const *argv[])
   	if(connect(socketfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))==0)
   	{
       		write(socketfd, &socket_msg_req, sizeof(socket_msg_req));
-      		sleep(2);
+      		sleep(10);
       		read(socketfd, &socket_msg_resp, sizeof(socket_msg_resp));
    		printf("read something\n");	
       		shutdown(socketfd, SHUT_RDWR);

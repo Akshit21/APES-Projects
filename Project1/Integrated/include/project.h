@@ -16,6 +16,7 @@
 #include <errno.h>
 #include <semaphore.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -31,17 +32,20 @@
 #include "helper.h"
 #include "led.h"
 
+#define _GNU_SOURCE
+
+
 #define SENSOR_STARTUP_TEST
 #define TEMP_TASK
 //#define TEMP_TASK_ALERT
 #define TEMP_TASK_MESSAGING
-#define LIGHT_TASK
-#define LIGHT_TASK_ALERT
-#define LIGHT_TASK_MESSAGING
+//#define LIGHT_TASK
+//#define LIGHT_TASK_ALERT
+//#define LIGHT_TASK_MESSAGING
 #define SOCKET_TASK
 #define LOGGER_TASK
 #define LOGGER_TASK_MESSAGING
-#define MAIN_HEARTBEAT_REQUEST
+//#define MAIN_HEARTBEAT_REQUEST
 
 #define DEBUG printf
 #endif
