@@ -1,3 +1,23 @@
+/**************************************************************************************************
+* Copyright (C) 2017 by Akshit Shah, Shuting Guo
+*
+* Redistribution, modification or use of this software in source or binary
+* forms is permitted as long as the files maintain this copyright. Users are
+* permitted to modify this and use it to learn about the field of embedded
+* software. Akshit Shah, Shuting Guo, Prof. Alex Fosdick and the University of Colorado are
+* not liable for any misuse of this material.
+***************************************************************************************************/
+/***************************************************************************************************
+* @author : Akshit Shah, Shuting Guo
+* @date : 03/10/2018
+*
+* @file : socket_client.c
+* @brief : Client routine for requesting data from the system via socket
+*
+* @tool : Compiler - GCC, Linker - GDB, Cross Compiler - arm-linux-gnueabihf-gcc
+* @hardware : Beagle Bone Green AM335x Arm Corex - A8, TMP106, APDS-9301
+* @reference :
+***************************************************************************************************/
 #include "project.h"
 
 #define PORT_NO (9999)
@@ -31,7 +51,7 @@ int main(int argc, char const *argv[])
       		write(socketfd, &socket_msg_req, sizeof(socket_msg_req));
       		sleep(10);
       		read(socketfd, &socket_msg_resp, sizeof(socket_msg_resp));
-   		printf("read something\n");	
+   		printf("read something\n");
       		shutdown(socketfd, SHUT_RDWR);
       		process_msg(&socket_msg_resp);
   	}

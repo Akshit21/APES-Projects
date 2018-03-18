@@ -1,3 +1,23 @@
+/**************************************************************************************************
+* Copyright (C) 2017 by Akshit Shah, Shuting Guo
+*
+* Redistribution, modification or use of this software in source or binary
+* forms is permitted as long as the files maintain this copyright. Users are
+* permitted to modify this and use it to learn about the field of embedded
+* software. Akshit Shah, Shuting Guo, Prof. Alex Fosdick and the University of Colorado are
+* not liable for any misuse of this material.
+***************************************************************************************************/
+/***************************************************************************************************
+* @author : Akshit Shah, Shuting Guo
+* @date : 03/1/2018
+*
+* @file : task_log.c
+* @brief : Logger Thread Task
+*
+* @tool : Compiler - GCC, Linker - GDB, Cross Compiler - arm-linux-gnueabihf-gcc
+* @hardware : Beagle Bone Green AM335x Arm Corex - A8, TMP106, APDS-9301
+* @reference :
+***************************************************************************************************/
 #include "project.h"
 
 const char *colors[] = {"\x1b[0m", "\x1b[32m", "\x1b[35m", "\x1b[31m", "\x1b[36m", "\x1b[33m"};
