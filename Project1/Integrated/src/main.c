@@ -106,22 +106,25 @@ msg_send(&info);
   uint32_t heartbeat_monitor[4] = {0};
   while(1)
   {
+    /* Send heart beat request */
     request_heartbeat();
     chance++;
+    /* Process the heart beat response */
     while(main_queue_flag)
     {
 	    main_queue_flag--;
       memset(info.data.msg, 0, sizeof(info.data.msg));
       info.thread_mutex_lock = main_queue_mutex;
       info.qName = MAIN_QUEUE;
+      /* Receive HEARTBEAT response */
       msg_receive(&info);
       main_msg = info.data;
       if (main_msg.requestId == HEART_BEAT)
       {
-        printf ("Source ID: %d \n", main_msg.sourceId);
-        printf ("Timestamp: %s", ctime(&main_msg.timeStamp));
-        printf ("Log Level: %s \n", levels[main_msg.type]);
-        printf ("Message Data: %s \n", main_msg.msg);
+        DEBUG ([DEBUG] "Source ID: %d \n", main_msg.sourceId);
+        DEBUG ([DEBUG] "Timestamp: %s", ctime(&main_msg.timeStamp));
+        DEBUG ([DEBUG] "Log Level: %s \n", levels[main_msg.type]);
+        DEBUG ([DEBUG] "Message Data: %s \n", main_msg.msg);
         heartbeat_monitor[main_msg.sourceId - 1]++;
       }
     }
@@ -133,13 +136,13 @@ msg_send(&info);
       {
         if(heartbeat_monitor[i-1] == 0)
         {
-          printf("Call Cleanup\n");
+          DEBUG([WARNING] "Call Cleanup\n");
           /*Try logging if Logger Thread is active*/
           if(heartbeat_monitor[0])
           {
             memset(&info,0,sizeof(info));
             info.data = create_message_struct(MAIN_THREAD,LOGGERTHREAD,ERROR_MSG,LOG_MSG);
-            sprintf(info.data.msg,"SHUTTING DOWN THE SYSTEM: Thread Inactive");
+            sprintf(info.data.msg,"SHUTTING DOWN THE SYSTEM: %s Thread Inactive", task[i+1]);
             info.thread_mutex_lock = log_queue_mutex;
             info.qName = LOGGER_QUEUE;
             msg_send(&info);

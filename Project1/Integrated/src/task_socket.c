@@ -20,8 +20,10 @@
 ***************************************************************************************************/
 #include "project.h"
 
+/* SOCKET THREAD */
 void * task_socket(void* param)
 {
+  /* Local Variables */
   Message_t socket_msg = {0};
   ThreadInfo_t info = {0};
 	Status_t status = SUCCESS;
@@ -55,26 +57,28 @@ void * task_socket(void* param)
      until accept() call accepts the connection.
      The maximum size for the backlog queue is set to 5 */
   listen(socketfd, 10);
-
   while(status == SUCCESS)
   {
 	  DEBUG("[DEBUG] SOCKET task running.\n");
     /* Check if any client request */
-
     if(newsocketfd = accept(socketfd, NULL, NULL))
     {
+      /* Read the request */
       if(read(newsocketfd, &socket_msg, sizeof(socket_msg)) == sizeof(socket_msg))
       {
-        /* Send out request to corresponding tasks */
+        /* Process the request & Send out request to corresponding tasks */
         switch (socket_msg.requestId)
         {
+          /* If any temperature request */
           case GET_TEMP_C:
           case GET_TEMP_K:
           case GET_TEMP_F:
+            /*Message structure*/
             socket_msg = create_message_struct(SOCKET_THREAD, TEMPTHREAD, INFO, socket_msg.requestId);
             info.data = socket_msg;
             info.thread_mutex_lock = temp_queue_mutex;
             info.qName = TEMP_QUEUE;
+            /*Send to the queue*/
             msg_send(&info);
             DEBUG("[DEBUG] SOCKET task sent out temperature request to TMP task.\n");
             /*LOG THE REQUEST*/
@@ -86,13 +90,16 @@ void * task_socket(void* param)
             msg_send(&info);
             DEBUG("[DEBUG] SOCKET task sent out LOG_MSG request to LOGGER task.\n");
             break;
+          /* If any light request */
           case GET_LIGHT:
           case GET_LIGHT_STATE:
+            /*Message structure*/
             socket_msg = create_message_struct(SOCKET_THREAD, LIGHTTHREAD, INFO, socket_msg.requestId);
             info.data = socket_msg;
             memset(info.data.msg, 0, sizeof(info.data.msg));
             info.thread_mutex_lock = light_queue_mutex;
             info.qName = LIGHT_QUEUE;
+            /*Send to the queue*/
             msg_send(&info);
             DEBUG("[DEBUG] SOCKET task sent out light request to LIGHT task.\n");
             /*LOG THE REQUEST*/
@@ -114,7 +121,7 @@ void * task_socket(void* param)
       }
     }
 
-    /*Process heartbeat request */
+    /*Process queue Messages */
     while(socket_queue_flag)
     {
       socket_queue_flag--;
@@ -128,10 +135,12 @@ void * task_socket(void* param)
         {
           case HEART_BEAT:
 		        DEBUG("[DEBUG] SOCKET task received HEARTBEAT request.\n");
+            /*Message structure*/
             socket_msg = create_message_struct(SOCKET_THREAD, MAINTHREAD, HEARTBEAT, HEART_BEAT);
             info.data = socket_msg;
             info.thread_mutex_lock = main_queue_mutex;
             info.qName = MAIN_QUEUE;
+            /*Respond to the heart beat request */
             status = msg_send(&info);
             DEBUG("[DEBUG] SOCKET task responeded to HEARTBEAT request.\n");
 	    break;
@@ -140,6 +149,7 @@ void * task_socket(void* param)
           case GET_TEMP_K:
           case GET_LIGHT:
           case GET_LIGHT_STATE:
+            /* Respond to the socket client request */
             write(newsocketfd, &socket_msg, sizeof(socket_msg));
             DEBUG("[DEBUG] SOCKET task responded to client request.\n");
             break;
@@ -149,6 +159,7 @@ void * task_socket(void* param)
       }
     }
   }
+  /* Thread Cleanup Routines */
   DEBUG("[DEBUG] SOCKET task exits.\n");
   pthread_mutex_destroy(&socket_queue_mutex);
   mq_unlink(SOCKET_QUEUE);

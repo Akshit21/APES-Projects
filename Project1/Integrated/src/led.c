@@ -26,9 +26,11 @@ Status_t ledOn(char *ledAddr)
 {
   FILE *pFile = NULL;
 
+  /* Open File handle of Led*/
 	if((pFile = fopen(ledAddr,"w")) == NULL)
 		return ERROR;
 
+  /* Write 1 to set the led */
   if(fwrite("1",1,1,pFile) < 0)
 		return ERROR;
 
@@ -43,9 +45,11 @@ Status_t ledOff(char *ledAddr)
 {
   FILE *pFile = NULL;
 
+  /* Open File handle of Led */
 	if((pFile = fopen(ledAddr,"w")) == NULL)
 		return ERROR;
 
+  /* Write 0 to unset the led */
   if(fwrite("0",1,1,pFile) < 0)
 		return ERROR;
 
