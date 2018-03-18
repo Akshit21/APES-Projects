@@ -20,36 +20,48 @@
 ***************************************************************************************************/
 
 #include "project.h"
+char ledPath[] = "/sys/class/leds/beaglebone:green:usr0/brightness";
 
+/* Function to turn on the led */
 Status_t ledOn(char *ledAddr)
 {
-    FILE *pFile = NULL;
+  FILE *pFile = NULL;
 
 	if((pFile = fopen(ledAddr,"w")) == NULL)
-		return ERROR_OPEN;
+		return ERROR;
 
-    if(fwrite("1",1,1,pFile) < 0)
-		return ERROR_WRITE;
+  if(fwrite("1",1,1,pFile) < 0)
+		return ERROR;
 
-    if(fclose(pFile) != 0)
-        return ERROR_CLOSE;
+  if(fclose(pFile) != 0)
+    return ERROR;
 
-    return SUCCESS;
+  return SUCCESS;
 }
 
-
+/* Function to turn of the led */
 Status_t ledOff(char *ledAddr)
 {
-    FILE *pFile = NULL;
+  FILE *pFile = NULL;
 
 	if((pFile = fopen(ledAddr,"w")) == NULL)
-		return ERROR_OPEN;
+		return ERROR;
 
-    if(fwrite("0",1,1,pFile) < 0)
-		return ERROR_WRITE;
+  if(fwrite("0",1,1,pFile) < 0)
+		return ERROR;
 
-    if(fclose(pFile) != 0)
-        return ERROR_CLOSE;
+  if(fclose(pFile) != 0)
+        return ERROR;
 
-    return SUCCESS;
+  return SUCCESS;
+}
+
+/* Function to Blink an LED */
+void blinkLED(void)
+{
+  ledOn(ledPath);
+  sleep(1);
+  ledOff(ledPath);
+  sleep(1);
+  ledOn(ledPath);
 }

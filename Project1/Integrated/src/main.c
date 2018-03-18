@@ -4,7 +4,7 @@ int main(int argc, char const *argv[])
 {
   pthread_t thread1, thread2, thread3, thread4;
   int32_t tmp_handle, apds_handle;
-  Status_t status;
+  Status_t status = SUCCESS;
 
   /* Connect the sensor */
 #ifdef TEMP_TASK
@@ -26,7 +26,7 @@ int main(int argc, char const *argv[])
   if(status == ERROR)
   {
     DEBUG("[DEBUG] Sensor start up test failed, exit.\n");
-    exit(EXIT_FAILURE);
+    //exit(EXIT_FAILURE);
   }
 #endif
 
@@ -35,14 +35,14 @@ int main(int argc, char const *argv[])
   if(pthread_create(&thread1, NULL, task_tmp, (void *)&tmp_handle))
   {
     perror("Failed to create the temperature task.");
-    exit(EXIT_FAILURE);
+    //exit(EXIT_FAILURE);
   }
 #endif
 #ifdef LIGHT_TASK
   if(pthread_create(&thread2, NULL, task_light, (void *)&apds_handle))
   {
     perror("Failed to create the light task.");
-    exit(EXIT_FAILURE);
+    //exit(EXIT_FAILURE);
   }
 #endif
 
@@ -50,17 +50,24 @@ int main(int argc, char const *argv[])
   if(pthread_create(&thread3, NULL, task_socket, NULL))
   {
     perror("Failed to create the socket task.");
-    exit(EXIT_FAILURE);
+    //exit(EXIT_FAILURE);
   }
 #endif
 #ifdef LOGGER_TASK
   if(pthread_create(&thread4, NULL, task_log, NULL))
   {
     perror("Failed to create the socket task.");
-    exit(EXIT_FAILURE);
+    //exit(EXIT_FAILURE);
   }
 #endif
 
+/* Startup Test Failed */
+if (status == ERROR)
+{
+  /* Blink LED */
+  blinkLED();
+  exit(EXIT_FAILURE);
+}
 /* Startup test sucessful */
 Message_t main_msg = {0};
 ThreadInfo_t info = {0};
@@ -115,7 +122,9 @@ msg_send(&info);
             info.thread_mutex_lock = log_queue_mutex;
             info.qName = LOGGER_QUEUE;
             msg_send(&info);
-            sleep(5);/*Wait for logger thread to process*/
+            sleep(2);/*Wait for logger thread to process*/
+            /* Blink LED */
+            blinkLED();
           }
           //Cleanup_routine();
         }

@@ -147,6 +147,8 @@ void * task_socket(void* param)
   DEBUG("[DEBUG] SOCKET task exits.\n");
   pthread_mutex_destroy(&socket_queue_mutex);
   mq_unlink(SOCKET_QUEUE);
+  /* Blink LED */
+  blinkLED();
   pthread_exit(NULL);
 }
 

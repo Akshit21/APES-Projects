@@ -65,6 +65,8 @@ void *task_log(void *param)
   fclose(pfile);
   pthread_mutex_destroy(&log_queue_mutex);
   mq_unlink(LOGGER_QUEUE);
+  /* Blink LED */
+  blinkLED();
   pthread_exit(NULL);
 }
 

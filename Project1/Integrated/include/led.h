@@ -18,9 +18,33 @@
 #ifndef LED_H_
 #define LED_H_
 
-// static char ledPath[] = {"/sys/class/leds/beaglebone:green:usr0/brightness"};
-//
-// Status_t ledOn(char *ledAddr);
-// Status_t ledOff(char *ledAddr);
+extern char ledPath[];
+
+/**
+* @brief Function to turn on the led
+*
+* @param ledAddr Led address path for beaglebone
+*
+* @return Status SUCCES/ERROR
+*/
+Status_t ledOn(char *ledAddr);
+
+/**
+* @brief Function to turn off the led
+*
+* @param ledAddr Led address path for beaglebone
+*
+* @return Status SUCCES/ERROR
+*/
+Status_t ledOff(char *ledAddr);
+
+/**
+* @brief Function to blink the led
+*
+* @param void
+*
+* @return void
+*/
+void blinkLED(void);
 
 #endif /* LED_H_ */

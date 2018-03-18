@@ -20,6 +20,7 @@
 
 #define MAX_PAYLOAD_SIZE (50)
 
+/* Queues */
 #define LOGGER_QUEUE	"/qlogger"
 #define TEMP_QUEUE		"/qtemp"
 #define LIGHT_QUEUE		"/qlight"
@@ -27,6 +28,7 @@
 #define SOCKET_QUEUE	"/qsocket"
 #define QUEUE_SIZE		(1024)
 
+/* Status */
 typedef enum _Status_t
 {
 	ERROR,
@@ -36,6 +38,7 @@ typedef enum _Status_t
   ERROR_MAX
 } Status_t;
 
+/* Requests */
 typedef enum _RequesId_t
 {
     LOG_MSG,
@@ -52,6 +55,7 @@ typedef enum _RequesId_t
     REQUEST_MAX
 } RequestId_t;
 
+/* Sources */
 typedef enum _Source_t
 {
     MAIN_THREAD,
@@ -65,6 +69,7 @@ typedef enum _Source_t
     SOURCE_MAX
 } Source_t;
 
+/* Destinations */
 typedef enum _Dest_t
 {
     MAINTHREAD,
@@ -78,6 +83,7 @@ typedef enum _Dest_t
     DEST_MAX
 } Dest_t;
 
+/* LOG Types */
 typedef enum _LogLevel_t
 {
     INFO,
@@ -90,6 +96,7 @@ typedef enum _LogLevel_t
     LEVEL_MAX
 } LogLevel_t;
 
+/* Message Structure */
 typedef struct _Message_t
 {
     Source_t sourceId;
@@ -100,6 +107,7 @@ typedef struct _Message_t
     char msg[MAX_PAYLOAD_SIZE];
 } Message_t;
 
+/* Thread Info Structure */
 typedef struct _ThreadInfo_t
 {
 	Message_t data;
@@ -125,13 +133,98 @@ extern char *task[];
 extern char *levels[];
 
 /*FUNCTION PROTOTYPES*/
-Message_t create_message_struct(Source_t src, Dest_t dest, LogLevel_t level,
-							RequestId_t req);
+
+/**
+* @brief Create a message structure for queue
+*
+* Given the parameters of the message structures,
+* create a message structure and return it to calling
+* thread which can be used to send or receive msg from
+* the queue
+*
+* @param src Source Id of the calling thread
+* @param dest Destination Id of the receiving thread
+* @param level Log type if any
+* @param req Request Id of the message request
+*
+* @return Message structure variable
+*/
+Message_t create_message_struct(Source_t src, Dest_t dest,
+																LogLevel_t level, RequestId_t req);
+
+/**
+* @brief Update the queue flags
+*
+* Given the Destination id of the queue, update the corresponding
+* flag indicating number of message in the queues
+*
+* @param dest Destination Id of the receiving thread
+*
+* @return void
+*/
 void update_queue_flag(Dest_t dest);
+
+/**
+* @brief Send the message to the corresponding queue
+*
+* Given the Thread Info structure which contains the messages
+* structure, the mutex and qName. This function sends the message to
+* the queue specified by the queue name in the info structure
+*
+* @param info Pointer to the ThreadInfo_t structure
+*
+* @return Status SUCCESS/ERROR
+*/
 Status_t msg_send(ThreadInfo_t *info);
+
+/**
+* @brief Receive the message to the corresponding queue
+*
+* Given the Thread Info structure which contains the messages
+* structure, the mutex and qName. This function receives the message to
+* the queue specified by the queue name in the info structure and
+* stores the message in the message structure pointed by info
+*
+* @param info Pointer to the ThreadInfo_t structure
+*
+* @return Status SUCCESS/ERROR
+*/
 Status_t msg_receive(ThreadInfo_t *info);
+
+/**
+* @brief Send the message to the log queue
+*
+* Wrapper around message send
+*
+* @param info Pointer to the ThreadInfo_t structure
+*
+* @return Status SUCCESS/ERROR
+*/
 Status_t msg_log(ThreadInfo_t *info);
+
+/**
+* @brief Send HeartBeat request to all threads
+*
+* Main uses this helper function to send heart beat
+* requests to all the threads
+*
+* @param void
+*
+* @return Status SUCCES/ERROR
+*/
 Status_t request_heartbeat(void);
+
+/**
+* @brief Log the data into a local file
+*
+* Given the File handler, file name and the message to be
+* logged, this function formats the data and logs the data in
+* the file
+*
+* @param info Pointer to the ThreadInfo_t structure
+*
+* @return Status SUCCESS
+*/
 Status_t log_data(FILE **pfile, Message_t *message, const char *fileName);
 
 #endif /* API_H_ */

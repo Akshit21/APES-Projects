@@ -81,11 +81,11 @@ void * task_light(void * param)
     {
 	     i2c_write_byte_mutex(apds_handle, CMD|CLEAR|CONTROL_REG, 0x03);
        /* Update light state */
+	apds_update_state(apds_handle, light_state);
        while((retry<=RETRY_MAX)&&(op_flag==0))
        {
-         if(apds_update_state(apds_handle, light_state)==ERROR)
-         // if((i2c_read_word_mutex(apds_handle, CMD | WORD | DATA0_REG, &ch0_data)!=0) ||
-         //    (i2c_read_word_mutex(apds_handle, CMD | WORD | DATA1_REG, &ch1_data)!=0))
+         if((i2c_read_word_mutex(apds_handle, CMD | WORD | DATA0_REG, &ch0_data)!=0) ||
+            (i2c_read_word_mutex(apds_handle, CMD | WORD | DATA1_REG, &ch1_data)!=0))
          {
            retry++;
          }
@@ -106,6 +106,8 @@ void * task_light(void * param)
        {
 	        DEBUG("[DEBUG] LIGHT task updated light state to: %s\n", light_state_s[light_state]);
           op_flag = 0;
+	  light = apds_raw_to_lux(ch0_data, ch1_data);
+	  DEBUG("[DEBUG] LIGHT task get light: %.3f lux\n", light);
 #ifdef LIGHT_TASK_MESSAGING
           apds_msg = create_message_struct(LIGHT_THREAD, LOGGERTHREAD, INFO, LOG_MSG);
           sprintf(apds_msg.msg,"Light state changed to: %s",light_state_s[light_state]);
@@ -117,9 +119,6 @@ void * task_light(void * param)
         }
     }
     /* Enqueue error message onto the queue */
-
-    //light = apds_raw_to_lux(ch0_data, ch1_data);
-    //printf("Light:%.2f\n", light);
 #ifdef LIGHT_TASK_MESSAGING
     /* Process message queue */;
     while (light_queue_flag)
@@ -150,7 +149,7 @@ void * task_light(void * param)
 					  DEBUG("[DEBUG] LIGHT task received GET_LIGHT request.\n");
 					  apds_msg = create_message_struct(LIGHT_THREAD, SOCKETTHREAD, INFO, GET_LIGHT);
             // populate lux value
-            sprintf(apds_msg.msg,"Light Value: %0.3f.",8.5);
+            sprintf(apds_msg.msg,"Light Value: %0.3f.",light);
 					  info.data = apds_msg;
 					  info.thread_mutex_lock = socket_queue_mutex;
 					  info.qName = SOCKET_QUEUE;
@@ -161,7 +160,7 @@ void * task_light(void * param)
 					  DEBUG("[DEBUG] LIGHT task received GET_LIGHT_STATE request.\n");
 					  apds_msg = create_message_struct(LIGHT_THREAD, SOCKETTHREAD, INFO, GET_LIGHT_STATE);
             // Populate light state
-            sprintf(apds_msg.msg,"Light STATE: %s.","DAY");
+            sprintf(apds_msg.msg,"Light STATE: %s.",light_state_s[light_state]);
             info.data = apds_msg;
 					  info.thread_mutex_lock = socket_queue_mutex;
 					  info.qName = SOCKET_QUEUE;
@@ -181,6 +180,8 @@ void * task_light(void * param)
   i2c_disconnect_mutex(apds_handle);
   pthread_mutex_destroy(&light_queue_mutex);
   mq_unlink(LIGHT_QUEUE);
+  /* Blink LED */
+  blinkLED();
   pthread_exit(NULL);
 }
 
