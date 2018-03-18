@@ -33,6 +33,7 @@
 #include <errno.h>
 #include <semaphore.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -49,6 +50,9 @@
 #include "helper.h"
 #include "led.h"
 
+#define _GNU_SOURCE
+
+
 #define SENSOR_STARTUP_TEST
 /* Compile time switch for debugging */
 #define TEMP_TASK
@@ -60,7 +64,7 @@
 #define SOCKET_TASK
 #define LOGGER_TASK
 #define LOGGER_TASK_MESSAGING
-#define MAIN_HEARTBEAT_REQUEST
+//#define MAIN_HEARTBEAT_REQUEST
 #define DEBUG printf
 
 #endif /* _PROJECT_H__ */

@@ -20,7 +20,13 @@
 ***************************************************************************************************/
 #include "project.h"
 
+<<<<<<< HEAD
 /* SOCKET THREAD */
+=======
+
+static int32_t accept_client_timeout(int32_t socket_handle, int32_t timeout_s);
+
+>>>>>>> 0bd442a36e9ad7e440711cbe8f67118299797c28
 void * task_socket(void* param)
 {
   /* Local Variables */
@@ -29,6 +35,8 @@ void * task_socket(void* param)
 	Status_t status = SUCCESS;
   int socketfd, newsocketfd, portno=PORT_NO;
   struct sockaddr_in serv_addr;
+  fd_set write_mask;
+  struct timeval tv = {.tv_sec=1, .tv_usec=0};
 
   /* Create a TCP/IP socket */
   if((socketfd = socket(AF_INET, SOCK_STREAM, 0))<0)
@@ -45,7 +53,8 @@ void * task_socket(void* param)
   serv_addr.sin_addr.s_addr = INADDR_ANY;
   /* Bind to the port */
   serv_addr.sin_port = htons(portno);
-  /* BInd the socket to the current IP address on port */
+
+  /* Bind the socket to the current IP address on port */
   if(bind(socketfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr))<0)
   {
     perror("Failed to bind socket to the current IP address on port.\n");
@@ -61,9 +70,10 @@ void * task_socket(void* param)
   {
 	  DEBUG("[DEBUG] SOCKET task running.\n");
     /* Check if any client request */
-    if(newsocketfd = accept(socketfd, NULL, NULL))
+	//if(newsocketfd = accept4(socketfd, NULL, NULL, SOCK_NONBLOCK))
+    if((newsocketfd=accept_client_timeout(socketfd, 2))!=0)
     {
-      /* Read the request */
+	    DEBUG("[DEBUG] SOCKET task received request from clients.\n");
       if(read(newsocketfd, &socket_msg, sizeof(socket_msg)) == sizeof(socket_msg))
       {
         /* Process the request & Send out request to corresponding tasks */
@@ -143,21 +153,29 @@ void * task_socket(void* param)
             /*Respond to the heart beat request */
             status = msg_send(&info);
             DEBUG("[DEBUG] SOCKET task responeded to HEARTBEAT request.\n");
-	    break;
+	          break;
           case GET_TEMP_C:
           case GET_TEMP_F:
           case GET_TEMP_K:
           case GET_LIGHT:
           case GET_LIGHT_STATE:
-            /* Respond to the socket client request */
-            write(newsocketfd, &socket_msg, sizeof(socket_msg));
-            DEBUG("[DEBUG] SOCKET task responded to client request.\n");
+      	    FD_ZERO(&write_mask);
+      	    FD_SET(newsocketfd, &write_mask);
+            //if(select(newsocketfd, (fd_set*)0, &write_mask, (fd_set*)0, &tv)>0)
+      	    //{
+      	    //DEBUG("[DEBUG] SOCKET task sending out...\n");
+      		  send(newsocketfd, &socket_msg, sizeof(socket_msg), 0);
+      	    //}
+      	    //write(newsocketfd, &socket_msg, sizeof(socket_msg));
+      	    close(newsocketfd);
+            DEBUG("[DEBUG] SOCKET task responded to client request\n");
             break;
           default:
             DEBUG("[DEBUG] SOCKET task received unrecognized request.\n");
         }
       }
     }
+
   }
   /* Thread Cleanup Routines */
   DEBUG("[DEBUG] SOCKET task exits.\n");
@@ -166,6 +184,25 @@ void * task_socket(void* param)
   /* Blink LED */
   blinkLED();
   pthread_exit(NULL);
+}
+
+static int32_t accept_client_timeout(int32_t socket_handle, int32_t timeout_s)
+{
+	int32_t ret;
+	struct timeval tv;
+	fd_set rfds;
+	FD_ZERO(&rfds);
+	FD_SET(socket_handle, &rfds);
+
+	tv.tv_sec = (long)timeout_s;
+	tv.tv_usec = 0;
+
+	if((ret=select(socket_handle+1, &rfds, (fd_set *)0, (fd_set*)0, &tv))>0)
+	{
+			return accept(socket_handle, NULL, NULL);
+	}
+	else
+		return 0;
 }
 
 // void client_request_process(void * param)

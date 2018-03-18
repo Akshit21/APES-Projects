@@ -25,7 +25,7 @@ int main(int argc, char const *argv[])
 {
   pthread_t thread1, thread2, thread3, thread4;
   int32_t tmp_handle, apds_handle;
-  Status_t status = SUCCES;
+  Status_t status = SUCCESS;
 
   /* Connect the sensor */
 #ifdef TEMP_TASK
@@ -87,7 +87,7 @@ if (status == ERROR)
 {
   /* Blink LED */
   blinkLED();
-  exit();
+  exit(EXIT_FAILURE);
 }
 /* Startup test sucessful */
 Message_t main_msg = {0};
@@ -128,7 +128,7 @@ msg_send(&info);
         heartbeat_monitor[main_msg.sourceId - 1]++;
       }
     }
-    sleep(5);
+    sleep(10);
     if(chance == 3)
     {
       chance = 0;
@@ -136,7 +136,11 @@ msg_send(&info);
       {
         if(heartbeat_monitor[i-1] == 0)
         {
+<<<<<<< HEAD
           DEBUG([WARNING] "Call Cleanup\n");
+=======
+			DEBUG("[DEBUG] %d thread did not respond. Call Cleanup======================================\n", i-1);
+>>>>>>> 0bd442a36e9ad7e440711cbe8f67118299797c28
           /*Try logging if Logger Thread is active*/
           if(heartbeat_monitor[0])
           {

@@ -20,6 +20,7 @@
 ***************************************************************************************************/
 
 #include "project.h"
+char ledPath[] = "/sys/class/leds/beaglebone:green:usr0/brightness";
 
 /* Function to turn on the led */
 Status_t ledOn(char *ledAddr)

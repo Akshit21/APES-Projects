@@ -18,7 +18,7 @@
 #ifndef LED_H_
 #define LED_H_
 
-static char ledPath[] = "/sys/class/leds/beaglebone:green:usr0/brightness";
+extern char ledPath[];
 
 /**
 * @brief Function to turn on the led

@@ -35,7 +35,7 @@ static Status_t tmp1021_set_threshold(int32_t dev_fp, uint8_t thresh_reg, uint16
 static Status_t tmp1021_get_threshold(int32_t dev_fp, uint8_t thresh_reg, uint16_t * value);
 static Status_t tmp1021_set_threshold_ext(int32_t dev_fp, uint8_t thresh_reg, uint16_t value);
 static Status_t tmp1021_get_threshold_ext(int32_t dev_fp, uint8_t thresh_reg, uint16_t * value);
-static float tmp_raw_to_temperature(int16_t raw, int32_t format);
+static float tmp_raw_to_temperature(int16_t raw);
 
 #ifdef TEMP_TASK
 void tmp_timer_handler(union sigval arg)
@@ -134,7 +134,7 @@ void * task_tmp(void * param)
     else
     {
       /* Convert digital data format to temperature */
-      temperature = tmp_raw_to_temperature(tmp, CELSIUS_FORMAT);
+      temperature = tmp_raw_to_temperature(tmp);
 			DEBUG("Temperature: %.2f\n", temperature);
       /* Enqueue the temperature onto the msg queue */
 #ifdef TEMP_TASK_MESSAGING
@@ -180,8 +180,8 @@ void * task_tmp(void * param)
 					info.data = tmp_msg;
 					info.thread_mutex_lock = socket_queue_mutex;
 					info.qName = SOCKET_QUEUE;
-					DEBUG("[DEBUG] TMP task responded to GET_TEMP_C request.\n");
 					msg_send(&info);
+					DEBUG("[DEBUG] TMP task responded to GET_TEMP_C request.\n");
 					break;
         case GET_TEMP_K:
 					DEBUG("[DEBUG] TMP task received GET_TEMP_K request.\n");
@@ -370,18 +370,19 @@ static Status_t tmp1021_get_threshold_ext(int32_t dev_fp, uint8_t thresh_reg, ui
   return SUCCESS;
 }
 
-static float tmp_raw_to_temperature(int16_t raw, int32_t format)
+static float tmp_raw_to_temperature(int16_t raw)
 {
   float temperature;
   raw = (int16_t)((raw&0xf000)>>12) | ((raw&0x00ff)<<4);
-  switch (format)
+  /* If a negative value */
+  if(raw & 0x0800)
   {
-    case CELSIUS_FORMAT:
-      temperature  = raw * 0.0625;
-      break;
-    case FAHRENHEIT_FORMAT:
-      temperature = raw * 0.1125 +32;
-      break;
+	  raw ^= 0xffff;
+	  raw += 1;
+	  temperature = -(raw*0.0625);
   }
+  else
+  	temperature  = raw * 0.0625;
+
   return temperature;
 }
