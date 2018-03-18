@@ -77,10 +77,10 @@ void test_tmp1021(void** state)
   i2c_disconnect_mutex(tmp_handle);
 }
 
-void test_initialise_queue_success(void **state)
+void test_initialise_queue(void **state)
 {
 	//initialise queue attributes
-	Status_t status;
+	Status_t status = SUCCESS;
 
   struct mq_attr attr;
 	attr.mq_maxmsg = 20;
@@ -98,10 +98,10 @@ void test_initialise_queue_success(void **state)
   assert_int_equal(status,SUCCESS);
 }
 
-void test_queue_send_receive_success(void **state)
+void test_queue_send_receive(void **state)
 {
 	//initialise queue attributes
-	Status_t status;
+	Status_t status = SUCCESS;
 
 	Message_t msg = create_message_struct(TEMP_THREAD, LOGGERTHREAD, INFO, LOG_MSG);
   sprintf(msg.msg,"DUMMY TEMP DATA");
@@ -110,7 +110,7 @@ void test_queue_send_receive_success(void **state)
   info.data = msg;
   info.thread_mutex_lock = log_queue_mutex;
   info.qName = LOGGER_QUEUE;
-  status = msg_send(&info);
+  msg_send(&info);
 
   memset(&info, 0, sizeof(info));
   info.thread_mutex_lock = log_queue_mutex;
@@ -121,22 +121,6 @@ void test_queue_send_receive_success(void **state)
   }
 
   assert_int_equal(status,SUCCESS);
-}
-
-void test_queue_send_receive_fail(void **state)
-{
-  Status_t status;
-	//initialise queue attributes
-  Message_t msg = create_message_struct(TEMP_THREAD, LOGGERTHREAD, INFO, LOG_MSG);
-  sprintf(msg.msg,"DUMMY TEMP DATA");
-  ThreadInfo_t info;
-
-  info.data = msg;
-  info.thread_mutex_lock = log_queue_mutex;
-  info.qName = "INVALID_QUEUE";//LOGGER_QUEUE;
-  status = msg_send(&info);
-
-  assert_int_equal(status,ERROR);
 }
 
 void test_logger(void **state)
@@ -176,9 +160,8 @@ int main(int argc, char ** argv)
   {
     cmocka_unit_test(test_apds9301),
     cmocka_unit_test(test_tmp1021),
-    cmocka_unit_test(test_initialise_queue_success),
-    cmocka_unit_test(test_queue_send_receive_fail),
-    cmocka_unit_test(test_queue_send_receive_success),
+    cmocka_unit_test(test_initialise_queue),
+    cmocka_unit_test(test_queue_send_receive),
     cmocka_unit_test(test_logger),
   };
 
